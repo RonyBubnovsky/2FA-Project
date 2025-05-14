@@ -1,5 +1,72 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+
+// Password strength component
+function PasswordStrengthMeter({ password }: { password: string }) {
+  // Calculate password strength
+  const calculateStrength = (password: string) => {
+    if (!password) return 0;
+    
+    let score = 0;
+    
+    // Length check
+    if (password.length >= 8) score += 1;
+    
+    // Character type checks
+    if (/[A-Z]/.test(password)) score += 1;
+    if (/[a-z]/.test(password)) score += 1;
+    if (/[0-9]/.test(password)) score += 1;
+    if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) score += 1;
+    
+    return score;
+  };
+  
+  const strength = calculateStrength(password);
+  
+  // Strength indicators
+  const getStrengthLabel = (strength: number) => {
+    if (strength === 0) return 'Very Weak';
+    if (strength === 1) return 'Weak';
+    if (strength === 2) return 'Fair';
+    if (strength === 3) return 'Good';
+    if (strength === 4) return 'Strong';
+    if (strength === 5) return 'Very Strong';
+    return '';
+  };
+  
+  const getStrengthColor = (strength: number) => {
+    if (strength === 0) return 'bg-red-500';
+    if (strength === 1) return 'bg-red-500';
+    if (strength === 2) return 'bg-orange-500';
+    if (strength === 3) return 'bg-yellow-500';
+    if (strength === 4) return 'bg-green-500';
+    if (strength === 5) return 'bg-green-600';
+    return '';
+  };
+  
+  return (
+    <div className="mt-1 mb-3">
+      <div className="flex h-1 w-full rounded bg-secondary-100 dark:bg-secondary-800 overflow-hidden">
+        {[1, 2, 3, 4, 5].map((level) => (
+          <div
+            key={level}
+            className={`h-full w-1/5 ${level <= strength ? getStrengthColor(strength) : 'bg-secondary-200 dark:bg-secondary-700'}`}
+          />
+        ))}
+      </div>
+      {password && (
+        <p className="text-xs mt-1 text-secondary-600 dark:text-secondary-400">
+          Password strength: <span className="font-medium">{getStrengthLabel(strength)}</span>
+        </p>
+      )}
+      {password && strength < 3 && (
+        <p className="text-xs text-red-500 mt-1">
+          Use at least 8 characters with uppercase, lowercase, numbers and special characters.
+        </p>
+      )}
+    </div>
+  );
+}
 
 export default function RegisterPage() {
   const [email, setEmail] = useState('')
@@ -10,18 +77,86 @@ export default function RegisterPage() {
   const [message, setMessage] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [validationErrors, setValidationErrors] = useState<{
+    email?: string;
+    firstName?: string;
+    lastName?: string;
+    password?: string;
+    confirmPassword?: string;
+  }>({})
+  
+  // Validate email with regex
+  const validateEmail = (email: string) => {
+    const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+    return regex.test(email)
+  }
+  
+  // Validate password strength
+  const validatePassword = (password: string) => {
+    const minLength = password.length >= 8;
+    const hasUppercase = /[A-Z]/.test(password);
+    const hasLowercase = /[a-z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
+    
+    return minLength && hasUppercase && hasLowercase && hasNumber && hasSpecial;
+  }
+  
+  // Form validation
+  const validateForm = () => {
+    const errors: {
+      email?: string;
+      firstName?: string;
+      lastName?: string;
+      password?: string;
+      confirmPassword?: string;
+    } = {};
+    
+    // Email validation
+    if (!email) {
+      errors.email = 'Email is required';
+    } else if (!validateEmail(email)) {
+      errors.email = 'Please enter a valid email address';
+    }
+    
+    // Name validations
+    if (firstName && !/^[a-zA-Z\s]+$/.test(firstName)) {
+      errors.firstName = 'First name should contain only letters';
+    }
+    
+    if (lastName && !/^[a-zA-Z\s]+$/.test(lastName)) {
+      errors.lastName = 'Last name should contain only letters';
+    }
+    
+    // Password validation
+    if (!password) {
+      errors.password = 'Password is required';
+    } else if (!validatePassword(password)) {
+      errors.password = 'Password is too weak';
+    }
+    
+    // Confirm password validation
+    if (password !== confirmPassword) {
+      errors.confirmPassword = 'Passwords do not match';
+    }
+    
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
-    setIsLoading(true)
+    
+    // Clear previous messages
     setMessage('')
     setError('')
     
-    if (password !== confirmPassword) {
-      setError('Passwords do not match')
-      setIsLoading(false)
-      return
+    // Validate form before submission
+    if (!validateForm()) {
+      return;
     }
+    
+    setIsLoading(true)
     
     try {
       const res = await fetch('/api/auth/register', {
@@ -30,8 +165,18 @@ export default function RegisterPage() {
         body: JSON.stringify({ email, firstName, lastName, password }),
       })
       const data = await res.json()
-      if (res.ok) setMessage('Check your email for verification link.')
-      else setError(data.error)
+      
+      if (res.ok) {
+        setMessage('Check your email for verification link.')
+        // Clear form on success
+        setEmail('')
+        setFirstName('')
+        setLastName('')
+        setPassword('')
+        setConfirmPassword('')
+      } else {
+        setError(data.error)
+      }
     } catch (err) {
       setError('An unexpected error occurred')
     } finally {
@@ -69,7 +214,7 @@ export default function RegisterPage() {
             </div>
           )}
           
-          <form onSubmit={onSubmit} className="space-y-6">
+          <form onSubmit={onSubmit} className="space-y-4">
             {error && (
               <div className="rounded-md bg-red-50 dark:bg-red-900/10 p-3 text-sm text-red-600 dark:text-red-400">
                 {error}
@@ -87,12 +232,15 @@ export default function RegisterPage() {
                 placeholder="name@example.com"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                className="input"
+                className={`input ${validationErrors.email ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
                 required
               />
+              {validationErrors.email && (
+                <p className="mt-1 text-sm text-red-600">{validationErrors.email}</p>
+              )}
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <label htmlFor="firstName" className="block text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-1">
                   First Name
@@ -104,9 +252,12 @@ export default function RegisterPage() {
                   placeholder="John"
                   value={firstName}
                   onChange={e => setFirstName(e.target.value)}
-                  className="input"
+                  className={`input ${validationErrors.firstName ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
                   required
                 />
+                {validationErrors.firstName && (
+                  <p className="mt-1 text-sm text-red-600">{validationErrors.firstName}</p>
+                )}
               </div>
               
               <div>
@@ -120,9 +271,12 @@ export default function RegisterPage() {
                   placeholder="Doe"
                   value={lastName}
                   onChange={e => setLastName(e.target.value)}
-                  className="input"
+                  className={`input ${validationErrors.lastName ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
                   required
                 />
+                {validationErrors.lastName && (
+                  <p className="mt-1 text-sm text-red-600">{validationErrors.lastName}</p>
+                )}
               </div>
             </div>
             
@@ -137,9 +291,13 @@ export default function RegisterPage() {
                 placeholder="••••••••"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                className="input"
+                className={`input ${validationErrors.password ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
                 required
               />
+              <PasswordStrengthMeter password={password} />
+              {validationErrors.password && (
+                <p className="mt-1 text-sm text-red-600">{validationErrors.password}</p>
+              )}
             </div>
             
             <div>
@@ -153,9 +311,12 @@ export default function RegisterPage() {
                 placeholder="••••••••"
                 value={confirmPassword}
                 onChange={e => setConfirmPassword(e.target.value)}
-                className="input"
+                className={`input ${validationErrors.confirmPassword ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
                 required
               />
+              {validationErrors.confirmPassword && (
+                <p className="mt-1 text-sm text-red-600">{validationErrors.confirmPassword}</p>
+              )}
             </div>
             
             <div className="pt-2">
