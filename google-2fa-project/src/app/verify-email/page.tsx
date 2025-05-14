@@ -4,7 +4,7 @@ import { useSearchParams, useRouter } from 'next/navigation'
 
 export default function VerifyEmailPage() {
   const params = useSearchParams()
-  const token = params.get('token') || ''
+  const token = params?.get('token') || ''
   const [msg, setMsg] = useState('Verifying…')
   const router = useRouter()
 
