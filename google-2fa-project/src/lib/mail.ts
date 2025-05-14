@@ -17,7 +17,8 @@ export async function sendVerificationEmail(to: string, token: string) {
   await transporter.sendMail({
     from: process.env.EMAIL_USER,
     to,
-    subject: 'Verify your email',
+    subject: 'Verify your email for Google 2FA App',
+    text: `Please verify your email by visiting: ${url}\nThis link expires in 24 hours.`,
     html: `
       <p>Click <a href="${url}">here</a> to verify your email.</p>
       <p>This link expires in 24 hours.</p>
