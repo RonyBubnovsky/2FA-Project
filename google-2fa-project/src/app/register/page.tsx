@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 
 // Password strength component
 function PasswordStrengthMeter({ password }: { password: string }) {
@@ -167,7 +167,7 @@ export default function RegisterPage() {
       const data = await res.json()
       
       if (res.ok) {
-        setMessage('Check your email for verification link.')
+        setMessage('Check your email / spam folder for verification link.')
         // Clear form on success
         setEmail('')
         setFirstName('')
