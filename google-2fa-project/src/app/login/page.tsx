@@ -9,7 +9,6 @@ export default function LoginPage() {
   const [rememberDevice, setRememberDevice] = useState(false)
   const [twoFARequired, setTwoFARequired] = useState(false)
   const [token, setToken] = useState('')
-  const [trustDevice, setTrustDevice] = useState(false)
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isChecking, setIsChecking] = useState(true)
@@ -71,7 +70,7 @@ export default function LoginPage() {
       const res = await fetch('/api/auth/2fa-verify-login', {
         method:'POST',
         headers:{ 'Content-Type':'application/json' },
-        body: JSON.stringify({ token, trustDevice })
+        body: JSON.stringify({ token, trustDevice: false })
       })
       const data = await res.json()
       if (res.ok) router.push('/dashboard')
@@ -133,19 +132,6 @@ export default function LoginPage() {
                   className="input"
                   required
                 />
-              </div>
-              
-              <div className="flex items-center">
-                <input
-                  id="trustDevice"
-                  type="checkbox"
-                  className="h-4 w-4 rounded border-secondary-300 text-primary-600 focus:ring-primary-500 dark:border-secondary-700 dark:bg-secondary-900"
-                  checked={trustDevice}
-                  onChange={e => setTrustDevice(e.target.checked)}
-                />
-                <label htmlFor="trustDevice" className="ml-2 block text-sm text-secondary-700 dark:text-secondary-300">
-                  Remember this device for 30 days
-                </label>
               </div>
               
               <button
