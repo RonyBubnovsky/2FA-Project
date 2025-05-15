@@ -12,6 +12,7 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isChecking, setIsChecking] = useState(true)
+  const [isUsingRecoveryCode, setIsUsingRecoveryCode] = useState(false)
   const router = useRouter()
 
   // Check if user is already logged in
@@ -67,7 +68,8 @@ export default function LoginPage() {
     setIsLoading(true)
     setError('')
     try {
-      const res = await fetch('/api/auth/2fa-verify-login', {
+      const endpoint = isUsingRecoveryCode ? '/api/auth/recovery-code-verify' : '/api/auth/2fa-verify-login'
+      const res = await fetch(endpoint, {
         method:'POST',
         headers:{ 'Content-Type':'application/json' },
         body: JSON.stringify({ token, trustDevice: false })
@@ -81,6 +83,12 @@ export default function LoginPage() {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  function toggleRecoveryCodeMode() {
+    setIsUsingRecoveryCode(!isUsingRecoveryCode)
+    setToken('')
+    setError('')
   }
 
   if (isChecking) {
@@ -102,10 +110,13 @@ export default function LoginPage() {
           <div className="card">
             <div className="mb-6 text-center">
               <h2 className="text-2xl font-display font-bold text-secondary-900 dark:text-secondary-100">
-                Enter 2FA Code
+                {isUsingRecoveryCode ? 'Enter Recovery Code' : 'Enter 2FA Code'}
               </h2>
               <p className="mt-2 text-sm text-secondary-600 dark:text-secondary-400">
-                Enter the 6-digit code from your authenticator app
+                {isUsingRecoveryCode 
+                  ? 'Enter one of your recovery codes to access your account' 
+                  : 'Enter the 6-digit code from your authenticator app'
+                }
               </p>
             </div>
             
@@ -118,21 +129,29 @@ export default function LoginPage() {
               
               <div>
                 <label htmlFor="token" className="block text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-1">
-                  Authentication Code
+                  {isUsingRecoveryCode ? 'Recovery Code' : 'Authentication Code'}
                 </label>
                 <input
                   id="token"
                   type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  autoComplete="one-time-code"
-                  placeholder="000000"
+                  inputMode={isUsingRecoveryCode ? 'text' : 'numeric'}
+                  pattern={isUsingRecoveryCode ? undefined : '[0-9]*'}
+                  autoComplete={isUsingRecoveryCode ? 'off' : 'one-time-code'}
+                  placeholder={isUsingRecoveryCode ? 'XXXX-XXXX' : '000000'}
                   value={token}
                   onChange={e => setToken(e.target.value)}
                   className="input"
                   required
                 />
               </div>
+              
+              {isUsingRecoveryCode && (
+                <div className="bg-amber-50 dark:bg-amber-900/10 p-3 rounded-md text-sm">
+                  <p className="text-amber-700 dark:text-amber-500">
+                    <strong>Note:</strong> Using a recovery code will disable 2FA on your account. You'll need to set it up again after logging in.
+                  </p>
+                </div>
+              )}
               
               <button
                 type="submit"
@@ -141,6 +160,19 @@ export default function LoginPage() {
               >
                 {isLoading ? 'Verifying...' : 'Verify'}
               </button>
+              
+              <div className="text-center">
+                <button 
+                  type="button" 
+                  onClick={toggleRecoveryCodeMode}
+                  className="text-sm text-primary-600 hover:text-primary-500"
+                >
+                  {isUsingRecoveryCode 
+                    ? 'Use authenticator app instead' 
+                    : 'Lost your authenticator device?'
+                  }
+                </button>
+              </div>
             </form>
           </div>
         ) : (

@@ -11,6 +11,8 @@ export default function Setup2FAPage() {
   const [twoFAEnabled, setTwoFAEnabled] = useState(false)
   const [showDisableConfirm, setShowDisableConfirm] = useState(false)
   const [initialLoading, setInitialLoading] = useState(true)
+  const [recoveryCodes, setRecoveryCodes] = useState<string[]>([])
+  const [showRecoveryCodes, setShowRecoveryCodes] = useState(false)
   const router = useRouter()
   
   // Always false for 2FA setup page - no longer allowing users to trust device here
@@ -55,7 +57,14 @@ export default function Setup2FAPage() {
         body: JSON.stringify({ token, trustDevice })
       })
       const data = await res.json()
-      if (res.ok) router.push('/dashboard')
+      if (res.ok) {
+        if (data.recoveryCodes && data.recoveryCodes.length > 0) {
+          setRecoveryCodes(data.recoveryCodes)
+          setShowRecoveryCodes(true)
+        } else {
+          router.push('/dashboard')
+        }
+      }
       else setError(data.error)
     } catch (error) {
       setError('An unexpected error occurred')
@@ -92,9 +101,80 @@ export default function Setup2FAPage() {
     }
   }
 
+  // Handle case when user confirms they've saved recovery codes
+  function handleRecoveryCodesContinue() {
+    setShowRecoveryCodes(false)
+    router.push('/dashboard')
+  }
+
   // Show loading state first
   if (initialLoading) {
     return <LoadingScreen message="Checking 2FA status..." />
+  }
+
+  // Show recovery codes after successful 2FA setup
+  if (showRecoveryCodes) {
+    return (
+      <div className="flex min-h-[80vh] flex-col items-center justify-center py-12">
+        <div className="w-full max-w-md">
+          <div className="card bg-secondary-800 dark:bg-secondary-900 text-white p-8 shadow-lg">
+            <div className="mb-6 text-center">
+              <h2 className="text-2xl font-display font-bold text-white">
+                Save Your Recovery Codes
+              </h2>
+              <p className="mt-2 text-sm text-secondary-200 dark:text-secondary-300">
+                Store these codes in a safe place. They can be used to regain access to your account if you lose your authenticator device.
+              </p>
+            </div>
+            
+            <div className="bg-secondary-700 dark:bg-secondary-800 p-4 rounded-lg mb-6 border-2 border-secondary-300 dark:border-secondary-600">
+              <div className="grid grid-cols-2 gap-2">
+                {recoveryCodes.map((code, index) => (
+                  <div key={index} className="font-mono text-center text-secondary-200 dark:text-secondary-300 p-2 bg-secondary-900 rounded border border-secondary-600">
+                    {code}
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div className="bg-amber-900/20 dark:bg-amber-900/30 p-4 rounded-lg mb-6 border border-amber-700/40">
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-amber-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm text-amber-400">
+                    <strong>Important:</strong> Each code can only be used once. If you use a recovery code, your 2FA will be automatically disabled and you'll need to set it up again.
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex flex-col space-y-4">
+              <button
+                onClick={() => {
+                  const text = recoveryCodes.join('\n')
+                  navigator.clipboard.writeText(text)
+                  alert('Recovery codes copied to clipboard')
+                }}
+                className="btn btn-secondary w-full py-3"
+              >
+                Copy to Clipboard
+              </button>
+              
+              <button
+                onClick={handleRecoveryCodesContinue}
+                className="btn btn-primary w-full py-3"
+              >
+                I've Saved My Recovery Codes
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   // 2FA is already enabled, show management UI
@@ -276,7 +356,7 @@ export default function Setup2FAPage() {
               </div>
               <div className="ml-3">
                 <p className="text-sm text-secondary-600 dark:text-secondary-400">
-                  If you lose access to your authenticator app, you&apos;ll need to contact support to regain access to your account.
+                  If you lose access to your authenticator app, you&apos;ll need to use one of your recovery codes to regain access to your account.
                 </p>
               </div>
             </div>

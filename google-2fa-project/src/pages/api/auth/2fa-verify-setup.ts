@@ -6,6 +6,7 @@ import dbConnect from '../../../lib/mongodb'
 import { User } from '../../../models/User'
 import { serialize } from 'cookie'
 import { v4 as uuidv4 } from 'uuid'
+import crypto from 'crypto'
 
 interface SessionData {
   userId?: string;
@@ -14,6 +15,19 @@ interface SessionData {
   lastName?: string;
   twoFAVerified?: boolean;
   tempSecret?: string;
+}
+
+// Function to generate a random recovery code
+function generateRecoveryCode() {
+  // Generate an 8-character random string (alphanumeric)
+  return crypto.randomBytes(4).toString('hex').toUpperCase();
+}
+
+// Function to hash a recovery code for secure storage
+function hashRecoveryCode(code: string) {
+  return crypto.createHash('sha256')
+    .update(code + process.env.RECOVERY_CODE_SECRET!)
+    .digest('hex');
 }
 
 async function handler(req: NextApiRequest & { session: IronSession<SessionData> }, res: NextApiResponse) {
@@ -33,7 +47,21 @@ async function handler(req: NextApiRequest & { session: IronSession<SessionData>
   const user = await User.findById(req.session.userId)
   if (!user) return res.status(400).end()
 
-  user.twoFA = { secret: base32, enabled: true }
+  // Generate 10 recovery codes
+  const recoveryCodes = Array.from({ length: 10 }, () => generateRecoveryCode());
+  
+  // Hash each recovery code before storing
+  const hashedRecoveryCodes = recoveryCodes.map(code => ({
+    code: hashRecoveryCode(code),
+    used: false
+  }));
+
+  // Set up 2FA with recovery codes
+  user.twoFA = { 
+    secret: base32, 
+    enabled: true,
+    recoveryCodes: hashedRecoveryCodes
+  };
 
   if (trustDevice) {
     const deviceToken = uuidv4()
@@ -53,7 +81,12 @@ async function handler(req: NextApiRequest & { session: IronSession<SessionData>
   delete req.session.tempSecret
   req.session.twoFAVerified = true
   await req.session.save()
-  res.json({ ok: true })
+  
+  // Return the unhashed recovery codes to the client
+  res.json({ 
+    ok: true,
+    recoveryCodes: recoveryCodes
+  })
 }
 
 export default async function verify2FASetupRoute(req: NextApiRequest, res: NextApiResponse) {

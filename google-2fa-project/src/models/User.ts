@@ -5,6 +5,11 @@ interface ITrustedDevice {
   expires: Date
 }
 
+interface IRecoveryCode {
+  code: string
+  used: boolean
+}
+
 export interface IUser extends Document {
   email: string
   password: string
@@ -18,6 +23,7 @@ export interface IUser extends Document {
   twoFA?: {
     secret: string
     enabled: boolean
+    recoveryCodes?: IRecoveryCode[]
   }
   trustedDevices?: ITrustedDevice[]
 }
@@ -57,6 +63,12 @@ const UserSchema = new mongoose.Schema<IUser>({
   twoFA: {
     secret: String,
     enabled: { type: Boolean, default: false },
+    recoveryCodes: [
+      {
+        code: String, // This will store the hashed recovery code
+        used: { type: Boolean, default: false }
+      }
+    ]
   },
   trustedDevices: [
     {
