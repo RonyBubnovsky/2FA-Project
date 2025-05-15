@@ -28,6 +28,11 @@ const isValidPassword = (password: string) => {
   return minLength && hasUppercase && hasLowercase && hasNumber && hasSpecial
 }
 
+// Mongoose validation error interface
+interface MongooseValidationError extends Error {
+  errors: Record<string, { message: string }>;
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).end()
   
@@ -85,13 +90,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     })
     await sendVerificationEmail(email, token)
     return res.json({ ok: true })
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Handle mongoose validation errors
-    if (error.name === 'ValidationError') {
-      const validationErrors = Object.values(error.errors).map((err: any) => err.message)
-      return res.status(400).json({ error: validationErrors.join(', ') })
+    if (error instanceof Error) {
+      if (error.name === 'ValidationError') {
+        const validationError = error as MongooseValidationError;
+        const validationErrors = Object.values(validationError.errors).map(err => err.message)
+        return res.status(400).json({ error: validationErrors.join(', ') })
+      }
+      console.error('Registration error:', error)
     }
-    console.error('Registration error:', error)
     return res.status(500).json({ error: 'Registration failed' })
   }
 }

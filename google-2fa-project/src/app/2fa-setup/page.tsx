@@ -34,9 +34,9 @@ export default function Setup2FAPage() {
         }
         setInitialLoading(false)
       })
-      .catch((err) => {
+      .catch((error) => {
         setError('Failed to load 2FA information')
-        console.error(err)
+        console.error(error)
         setInitialLoading(false)
       })
   }, [router])
@@ -55,8 +55,9 @@ export default function Setup2FAPage() {
       const data = await res.json()
       if (res.ok) router.push('/dashboard')
       else setError(data.error)
-    } catch (err) {
+    } catch (error) {
       setError('An unexpected error occurred')
+      console.error(error)
     } finally {
       setIsLoading(false)
     }
@@ -81,8 +82,9 @@ export default function Setup2FAPage() {
       } else {
         setError(data.error || 'Failed to disable 2FA')
       }
-    } catch (err) {
+    } catch (error) {
       setError('An unexpected error occurred')
+      console.error(error)
     } finally {
       setIsLoading(false)
     }
@@ -218,7 +220,10 @@ export default function Setup2FAPage() {
           
           {qr ? (
             <div className="bg-white dark:bg-secondary-800 p-4 rounded-lg mb-6 flex justify-center">
-              <img src={qr} alt="QR code" className="max-w-full h-auto" />
+              {/* Using a data URL with Next Image requires width and height */}
+              <div 
+                dangerouslySetInnerHTML={{ __html: `<img src="${qr}" alt="QR code" className="max-w-full h-auto" />` }}
+              />
             </div>
           ) : (
             <div className="flex justify-center items-center h-48 bg-secondary-50 dark:bg-secondary-800 rounded-lg mb-6">
@@ -286,7 +291,7 @@ export default function Setup2FAPage() {
               </div>
               <div className="ml-3">
                 <p className="text-sm text-secondary-600 dark:text-secondary-400">
-                  If you lose access to your authenticator app, you'll need to contact support to regain access to your account.
+                  If you lose access to your authenticator app, you&apos;ll need to contact support to regain access to your account.
                 </p>
               </div>
             </div>

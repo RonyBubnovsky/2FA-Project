@@ -1,9 +1,18 @@
 import { NextApiRequest, NextApiResponse } from 'next'
-import { getIronSession } from 'iron-session'
+import { getIronSession, IronSession } from 'iron-session'
 import { sessionOptions } from '../../../lib/session'
 import { serialize } from 'cookie'
 
-async function handler(req: NextApiRequest & { session: any }, res: NextApiResponse) {
+interface SessionData {
+  userId?: string;
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  twoFAVerified?: boolean;
+  tempSecret?: string;
+}
+
+async function handler(req: NextApiRequest & { session: IronSession<SessionData> }, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).end()
   req.session.destroy()
   
@@ -27,6 +36,6 @@ async function handler(req: NextApiRequest & { session: any }, res: NextApiRespo
 }
 
 export default async function logoutRoute(req: NextApiRequest, res: NextApiResponse) {
-  const session = await getIronSession(req, res, sessionOptions)
+  const session = await getIronSession<SessionData>(req, res, sessionOptions)
   return handler(Object.assign(req, { session }), res)
 }

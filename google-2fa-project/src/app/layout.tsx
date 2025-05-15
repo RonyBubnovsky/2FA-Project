@@ -1,6 +1,7 @@
 import './globals.css'
 import Script from 'next/script'
 import MobileMenu from './components/MobileMenu'
+import Link from 'next/link'
 
 export const metadata = { 
   title: 'My 2FA App',
@@ -43,7 +44,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div className="container-custom py-8">
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
               <div>
-                <a href="/" className="font-display text-xl font-semibold text-primary-600 dark:text-primary-500">My2FAApp</a>
+                <Link href="/" className="font-display text-xl font-semibold text-primary-600 dark:text-primary-500">My2FAApp</Link>
                 <p className="mt-2 text-sm text-secondary-600 dark:text-secondary-400">
                   Secure authentication with two-factor protection for your applications.
                 </p>

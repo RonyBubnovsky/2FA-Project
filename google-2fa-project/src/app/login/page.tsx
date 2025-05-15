@@ -31,8 +31,9 @@ export default function LoginPage() {
       } else {
         setError(data.error)
       }
-    } catch (err) {
+    } catch (error) {
       setError('An unexpected error occurred')
+      console.error(error)
     } finally {
       setIsLoading(false)
     }
@@ -51,8 +52,9 @@ export default function LoginPage() {
       const data = await res.json()
       if (res.ok) router.push('/dashboard')
       else setError(data.error)
-    } catch (err) {
+    } catch (error) {
       setError('An unexpected error occurred')
+      console.error(error)
     } finally {
       setIsLoading(false)
     }
@@ -198,22 +200,11 @@ export default function LoginPage() {
               </div>
             </form>
             
-            <div className="mt-6">
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-secondary-200 dark:border-secondary-800"></div>
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-background text-secondary-500 dark:text-secondary-400">
-                    Don't have an account?
-                  </span>
-                </div>
-              </div>
-              <div className="mt-6">
-                <a href="/register" className="btn btn-outline w-full py-3">
-                  Create an account
-                </a>
-              </div>
+            <div className="mt-6 pt-6 border-t border-secondary-200 dark:border-secondary-800 text-center">
+              <p className="text-sm text-secondary-600 dark:text-secondary-400">
+                Don&apos;t have an account?{' '}
+                <a href="/register" className="font-semibold text-primary-600 hover:text-primary-500">Sign up</a>
+              </p>
             </div>
           </div>
         )}

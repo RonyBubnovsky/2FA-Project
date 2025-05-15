@@ -177,8 +177,9 @@ export default function RegisterPage() {
       } else {
         setError(data.error)
       }
-    } catch (err) {
+    } catch (error) {
       setError('An unexpected error occurred')
+      console.error(error)
     } finally {
       setIsLoading(false)
     }

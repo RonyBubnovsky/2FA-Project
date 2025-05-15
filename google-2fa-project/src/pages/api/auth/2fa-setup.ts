@@ -1,12 +1,21 @@
 import { NextApiRequest, NextApiResponse } from 'next'
-import { getIronSession } from 'iron-session'
+import { getIronSession, IronSession } from 'iron-session'
 import { sessionOptions } from '../../../lib/session'
 import speakeasy from 'speakeasy'
 import QRCode from 'qrcode'
 import dbConnect from '../../../lib/mongodb'
 import { User } from '../../../models/User'
 
-async function handler(req: NextApiRequest & { session: any }, res: NextApiResponse) {
+interface SessionData {
+  userId?: string;
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  twoFAVerified?: boolean;
+  tempSecret?: string;
+}
+
+async function handler(req: NextApiRequest & { session: IronSession<SessionData> }, res: NextApiResponse) {
   if (req.method !== 'GET') return res.status(405).end()
   if (!req.session.userId) return res.status(401).end()
 
@@ -33,6 +42,6 @@ async function handler(req: NextApiRequest & { session: any }, res: NextApiRespo
 }
 
 export default async function setup2FARoute(req: NextApiRequest, res: NextApiResponse) {
-  const session = await getIronSession(req, res, sessionOptions)
+  const session = await getIronSession<SessionData>(req, res, sessionOptions)
   return handler(Object.assign(req, { session }), res)
 }

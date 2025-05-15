@@ -4,10 +4,15 @@ if (!process.env.MONGODB_URI) {
   throw new Error('Define MONGODB_URI in .env.local')
 }
 
-let cached = (global as any).mongoose
+interface MongooseCache {
+  conn: typeof mongoose | null;
+  promise: Promise<typeof mongoose> | null;
+}
+
+let cached: MongooseCache = (global as {mongoose?: MongooseCache}).mongoose || { conn: null, promise: null }
 
 if (!cached) {
-  cached = (global as any).mongoose = { conn: null, promise: null }
+  cached = (global as {mongoose?: MongooseCache}).mongoose = { conn: null, promise: null }
 }
 
 export default async function dbConnect() {

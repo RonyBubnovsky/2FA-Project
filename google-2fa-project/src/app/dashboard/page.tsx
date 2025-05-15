@@ -18,10 +18,9 @@ interface SessionData {
 export default async function Dashboard() {
   // Get the cookie header directly
   const cookieStore = await cookies()
-  const cookieValue = cookieStore.get('my2fa_session')?.value || ''
-  const req = { headers: { cookie: `my2fa_session=${cookieValue}` } } as any
-  const res = {} as any
-  const session = await getIronSession<SessionData>(req, res, sessionOptions)
+  
+  // Create an iron session using the cookie store
+  const session = await getIronSession<SessionData>(cookieStore, sessionOptions)
 
   if (!session.userId || !session.twoFAVerified) {
     redirect('/login')
@@ -67,7 +66,7 @@ export default async function Dashboard() {
                 <span className="h-2 w-2 rounded-full bg-green-400 inline-block mr-2"></span>
               </div>
               <p className="text-sm text-secondary-600 dark:text-secondary-400">
-                {session.twoFAVerified && 'verification complete' + (is2FAEnabled ? '' : ' (2FA not enabled)')}
+                {session.twoFAVerified && '2FA verification complete' + (is2FAEnabled ? '' : ' (2FA not enabled)')}
               </p>
             </div>
             {!is2FAEnabled && (
