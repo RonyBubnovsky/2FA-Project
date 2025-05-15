@@ -36,11 +36,11 @@ export default async function Home() {
             Protecting your digital identity in an increasingly vulnerable online world
           </p>
           <div className="mt-10 flex items-center justify-center gap-x-6">
-            <a href="/register" className="btn btn-primary px-6 py-3 text-base">
+            <a href="/register" className="bg-primary-600 hover:bg-primary-500 text-white hover:text-white font-medium px-6 py-3 rounded-md shadow-md hover:shadow-lg transition-all duration-200">
               Get Started
             </a>
-            <a href="/login" className="btn btn-outline px-6 py-3 text-base">
-              Sign In <span aria-hidden="true">→</span>
+            <a href="/login" className="bg-secondary-800 hover:bg-secondary-700 text-white hover:text-white font-medium px-6 py-3 rounded-md border border-secondary-600 transition-colors duration-200">
+              Sign In <span aria-hidden="true" className="ml-1">→</span>
             </a>
           </div>
         </div>

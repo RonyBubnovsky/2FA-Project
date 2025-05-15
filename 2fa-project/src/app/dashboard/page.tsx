@@ -51,7 +51,7 @@ export default async function Dashboard() {
               Welcome back, {fullName}
             </p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-5">
             <DeleteUserButton />
             <LogoutButton />
           </div>
@@ -74,11 +74,11 @@ export default async function Dashboard() {
               </p>
             </div>
             {!is2FAEnabled && (
-              <div className="mt-2">
+              <div className="mt-3">
                 <p className="text-xs text-amber-400">
                   Two-factor authentication is not enabled for your account
                 </p>
-                <a href="/2fa-setup" className="mt-1 inline-block text-xs font-medium text-primary-400 hover:text-primary-300">
+                <a href="/2fa-setup" className="mt-2 inline-block text-sm font-medium px-4 py-1.5 bg-primary-600 hover:bg-primary-500 text-white rounded-md transition-colors duration-200">
                   Enable 2FA now
                 </a>
               </div>
@@ -105,7 +105,7 @@ export default async function Dashboard() {
               </svg>
             </div>
             <h3 className="mt-4 text-lg font-medium text-white">Settings</h3>
-            <a href="/2fa-setup" className="mt-2 inline-block text-sm font-medium text-primary-400 hover:text-primary-300">
+            <a href="/2fa-setup" className="mt-3 inline-block text-sm font-medium px-4 py-1.5 bg-primary-600 hover:bg-primary-500 text-white rounded-md transition-colors duration-200">
               {is2FAEnabled ? 'Manage 2FA settings' : 'Enable 2FA security'}
             </a>
           </div>

@@ -28,18 +28,18 @@ export default function MobileMenu() {
             My2FAApp
           </a>
           
-          <nav className="hidden md:flex items-center space-x-1">
+          <nav className="hidden md:flex items-center space-x-4">
             {!isLoggedIn ? (
               <>
-                <a href="/login" className="btn btn-outline text-secondary-700 dark:text-secondary-300 px-4 py-2">
+                <a href="/login" className="bg-secondary-800 hover:bg-secondary-700 text-white hover:text-white font-medium px-5 py-2.5 rounded-md transition-colors duration-200">
                   Sign In
                 </a>
-                <a href="/register" className="btn btn-primary px-4 py-2">
+                <a href="/register" className="bg-primary-600 hover:bg-primary-500 text-white hover:text-white font-medium px-5 py-2.5 rounded-md shadow-md hover:shadow-lg transition-all duration-200">
                   Get Started
                 </a>
               </>
             ) : (
-              <a href="/dashboard" className="btn btn-outline text-secondary-700 dark:text-secondary-300 px-4 py-2">
+              <a href="/dashboard" className="bg-secondary-700 hover:bg-secondary-600 text-white hover:text-white font-medium px-5 py-2.5 rounded-md transition-colors duration-200">
                 Dashboard
               </a>
             )}
@@ -81,16 +81,16 @@ export default function MobileMenu() {
               </button>
             </div>
             <div className="flow-root">
-              <div className="space-y-2 py-6">
+              <div className="py-6 space-y-4">
                 {!isLoggedIn ? (
                   <>
-                    <a href="/login" className="block w-full py-2 font-medium text-secondary-700 dark:text-secondary-300">Sign In</a>
-                    <a href="/register" className="block w-full py-2 font-medium text-secondary-700 dark:text-secondary-300">Get Started</a>
+                    <a href="/login" className="block w-full py-3 font-medium text-center bg-secondary-800 text-white hover:text-white rounded-md hover:bg-secondary-700 transition-colors duration-200">Sign In</a>
+                    <a href="/register" className="block w-full py-3 font-medium text-center bg-primary-600 text-white hover:text-white rounded-md hover:bg-primary-500 transition-colors duration-200">Get Started</a>
                   </>
                 ) : (
                   <>
-                    <a href="/dashboard" className="block w-full py-2 font-medium text-secondary-700 dark:text-secondary-300">Dashboard</a>
-                    <a href="/2fa-setup" className="block w-full py-2 font-medium text-secondary-700 dark:text-secondary-300">Manage 2FA</a>
+                    <a href="/dashboard" className="block w-full py-3 font-medium text-center bg-secondary-700 text-white hover:text-white rounded-md hover:bg-secondary-600 transition-colors duration-200">Dashboard</a>
+                    <a href="/2fa-setup" className="block w-full py-3 font-medium text-center bg-secondary-700 text-white hover:text-white rounded-md hover:bg-secondary-600 transition-colors duration-200">Manage 2FA</a>
                   </>
                 )}
               </div>
