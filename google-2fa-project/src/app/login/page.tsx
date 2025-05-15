@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -160,9 +161,9 @@ export default function LoginPage() {
                   <label htmlFor="password" className="block text-sm font-medium text-secondary-700 dark:text-secondary-300">
                     Password
                   </label>
-                  <a href="#" className="text-sm text-primary-600 hover:text-primary-500">
+                  <Link href="/forgot-password" className="text-sm text-primary-600 hover:text-primary-500">
                     Forgot password?
-                  </a>
+                  </Link>
                 </div>
                 <input
                   id="password"

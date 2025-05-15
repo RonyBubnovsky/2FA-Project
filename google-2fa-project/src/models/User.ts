@@ -13,6 +13,8 @@ export interface IUser extends Document {
   emailVerified: boolean
   verificationToken?: string
   verificationTokenExpiry?: Date
+  resetPasswordToken?: string
+  resetPasswordExpires?: Date
   twoFA?: {
     secret: string
     enabled: boolean
@@ -50,6 +52,8 @@ const UserSchema = new mongoose.Schema<IUser>({
   emailVerified: { type: Boolean, default: false },
   verificationToken: String,
   verificationTokenExpiry: Date,
+  resetPasswordToken: String,
+  resetPasswordExpires: Date,
   twoFA: {
     secret: String,
     enabled: { type: Boolean, default: false },

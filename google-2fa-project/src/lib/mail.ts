@@ -25,3 +25,19 @@ export async function sendVerificationEmail(to: string, token: string) {
     `,
   })
 }
+
+export async function sendPasswordResetEmail(to: string, resetUrl: string) {
+  await transporter.sendMail({
+    from: process.env.EMAIL_USER,
+    to,
+    subject: 'Reset your password for Google 2FA App',
+    text: `You requested a password reset. Please visit: ${resetUrl}\nThis link expires in 1 hour. If you didn't request this reset, please ignore this email.`,
+    html: `
+      <h1>Password Reset</h1>
+      <p>You requested a password reset for your Google 2FA App account.</p>
+      <p>Click <a href="${resetUrl}">here</a> to reset your password.</p>
+      <p>This link expires in 1 hour.</p>
+      <p>If you didn't request this reset, please ignore this email or contact support if you're concerned.</p>
+    `,
+  })
+}
