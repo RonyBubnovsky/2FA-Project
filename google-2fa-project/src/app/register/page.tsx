@@ -1,5 +1,6 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 
 // Password strength component
 function PasswordStrengthMeter({ password }: { password: string }) {
@@ -77,6 +78,8 @@ export default function RegisterPage() {
   const [message, setMessage] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [isChecking, setIsChecking] = useState(true)
+  const router = useRouter()
   const [validationErrors, setValidationErrors] = useState<{
     email?: string;
     firstName?: string;
@@ -84,6 +87,31 @@ export default function RegisterPage() {
     password?: string;
     confirmPassword?: string;
   }>({})
+  
+  // Check if user is already logged in
+  useEffect(() => {
+    // If session cookie exists, check if we're already logged in
+    // by making a simple request to the dashboard
+    async function checkAuth() {
+      try {
+        const res = await fetch('/dashboard', {
+          method: 'HEAD',
+          redirect: 'manual', // Don't follow redirects
+        })
+        
+        // If status is 200, we weren't redirected, meaning we're authenticated
+        if (res.status === 200 || res.type === 'opaqueredirect') {
+          router.push('/dashboard')
+        }
+      } catch (error) {
+        console.error('Auth check error:', error)
+      } finally {
+        setIsChecking(false)
+      }
+    }
+    
+    checkAuth()
+  }, [router])
   
   // Validate email with regex
   const validateEmail = (email: string) => {
@@ -183,6 +211,19 @@ export default function RegisterPage() {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  // Add loading state at the top of the return statement
+  if (isChecking) {
+    return (
+      <div className="flex min-h-[80vh] flex-col items-center justify-center py-12">
+        <div className="animate-pulse flex space-x-2">
+          <div className="h-2 w-2 bg-primary-300 dark:bg-primary-600 rounded-full"></div>
+          <div className="h-2 w-2 bg-primary-300 dark:bg-primary-600 rounded-full"></div>
+          <div className="h-2 w-2 bg-primary-300 dark:bg-primary-600 rounded-full"></div>
+        </div>
+      </div>
+    )
   }
 
   return (
