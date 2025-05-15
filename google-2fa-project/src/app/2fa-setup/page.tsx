@@ -6,13 +6,15 @@ import LoadingScreen from '../components/LoadingScreen'
 export default function Setup2FAPage() {
   const [qr, setQr] = useState<string>()
   const [token, setToken] = useState('')
-  const [trustDevice, setTrustDevice] = useState(false)
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [twoFAEnabled, setTwoFAEnabled] = useState(false)
   const [showDisableConfirm, setShowDisableConfirm] = useState(false)
   const [initialLoading, setInitialLoading] = useState(true)
   const router = useRouter()
+  
+  // Always false for 2FA setup page - no longer allowing users to trust device here
+  const trustDevice = false
 
   useEffect(() => {
     // Check authentication status first
@@ -252,23 +254,6 @@ export default function Setup2FAPage() {
                 className="input"
                 required
               />
-            </div>
-            
-            <div className="flex items-start">
-              <div className="flex items-center h-5">
-                <input
-                  id="trustDevice"
-                  type="checkbox"
-                  checked={trustDevice}
-                  onChange={e => setTrustDevice(e.target.checked)}
-                  className="h-4 w-4 rounded border-secondary-300 text-primary-600 focus:ring-primary-500"
-                />
-              </div>
-              <div className="ml-3">
-                <label htmlFor="trustDevice" className="text-sm text-secondary-600 dark:text-secondary-400">
-                  Trust this device for 30 days
-                </label>
-              </div>
             </div>
             
             <div>
