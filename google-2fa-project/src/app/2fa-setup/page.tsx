@@ -8,13 +8,21 @@ export default function Setup2FAPage() {
   const [trustDevice, setTrustDevice] = useState(false)
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [twoFAEnabled, setTwoFAEnabled] = useState(false)
+  const [showDisableConfirm, setShowDisableConfirm] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
     fetch('/api/auth/2fa-setup')
       .then(r => r.json())
-      .then(data => setQr(data.qr))
-      .catch(() => setError('Failed to load QR code'))
+      .then(data => {
+        if (data.enabled) {
+          setTwoFAEnabled(true)
+        } else {
+          setQr(data.qr)
+        }
+      })
+      .catch(() => setError('Failed to load 2FA information'))
   }, [])
 
   async function verify(e: React.FormEvent) {
@@ -38,6 +46,136 @@ export default function Setup2FAPage() {
     }
   }
 
+  async function disable2FA(e: React.FormEvent) {
+    e.preventDefault()
+    setIsLoading(true)
+    setError('')
+    
+    try {
+      const res = await fetch('/api/auth/2fa-disable', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token })
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setTwoFAEnabled(false)
+        setShowDisableConfirm(false)
+        router.push('/dashboard')
+      } else {
+        setError(data.error || 'Failed to disable 2FA')
+      }
+    } catch (err) {
+      setError('An unexpected error occurred')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // 2FA is already enabled, show management UI
+  if (twoFAEnabled) {
+    return (
+      <div className="flex min-h-[80vh] flex-col items-center justify-center py-12">
+        <div className="w-full max-w-md">
+          <div className="card">
+            <div className="mb-6 text-center">
+              <h2 className="text-2xl font-display font-bold text-secondary-900 dark:text-secondary-100">
+                Manage Two-Factor Authentication
+              </h2>
+              <p className="mt-2 text-sm text-secondary-600 dark:text-secondary-400">
+                Two-factor authentication is currently enabled for your account
+              </p>
+            </div>
+            
+            {error && (
+              <div className="rounded-md bg-red-50 dark:bg-red-900/10 p-3 mb-6 text-sm text-red-600 dark:text-red-400">
+                {error}
+              </div>
+            )}
+            
+            {showDisableConfirm ? (
+              <div>
+                <div className="bg-amber-50 dark:bg-amber-900/10 p-4 rounded-lg mb-6">
+                  <h3 className="text-amber-800 dark:text-amber-400 font-medium">Disable 2FA Confirmation</h3>
+                  <p className="text-amber-700 dark:text-amber-500 mt-1 text-sm">
+                    This will make your account less secure. To disable 2FA, please enter the code from your authenticator app.
+                  </p>
+                </div>
+                
+                <form onSubmit={disable2FA} className="space-y-6">
+                  <div>
+                    <label htmlFor="token" className="block text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-1">
+                      Authentication Code
+                    </label>
+                    <input
+                      id="token"
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      autoComplete="one-time-code"
+                      placeholder="000000"
+                      value={token}
+                      onChange={e => setToken(e.target.value)}
+                      className="input"
+                      required
+                    />
+                  </div>
+                  
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setShowDisableConfirm(false)}
+                      className="btn btn-secondary flex-1"
+                      disabled={isLoading}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="btn btn-danger flex-1"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? 'Processing...' : 'Disable 2FA'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            ) : (
+              <div>
+                <div className="bg-green-50 dark:bg-green-900/10 p-4 rounded-lg mb-6">
+                  <p className="text-green-700 dark:text-green-500">
+                    Your account is protected with two-factor authentication. You will need your authenticator app whenever you sign in.
+                  </p>
+                </div>
+                
+                <div className="mt-6 pt-6 border-t border-secondary-200 dark:border-secondary-800">
+                  <button
+                    type="button"
+                    onClick={() => setShowDisableConfirm(true)}
+                    className="btn btn-outline-danger w-full"
+                  >
+                    Disable Two-Factor Authentication
+                  </button>
+                </div>
+              </div>
+            )}
+            
+            <div className="mt-6">
+              <button
+                type="button"
+                onClick={() => router.push('/dashboard')}
+                className="text-sm text-primary-600 hover:text-primary-500"
+              >
+                Return to Dashboard
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Regular setup UI
   return (
     <div className="flex min-h-[80vh] flex-col items-center justify-center py-12">
       <div className="w-full max-w-md">

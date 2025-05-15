@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation'
 import { getIronSession } from 'iron-session'
 import { sessionOptions } from '../../lib/session'
 import LogoutButton from '../components/LogoutButton'
+import dbConnect from '../../lib/mongodb'
+import { User } from '../../models/User'
 
 interface SessionData {
   userId?: string
@@ -24,6 +26,15 @@ export default async function Dashboard() {
   if (!session.userId || !session.twoFAVerified) {
     redirect('/login')
   }
+
+  // Connect to database and get user data
+  await dbConnect()
+  const user = await User.findById(session.userId)
+  if (!user) {
+    redirect('/login')
+  }
+
+  const is2FAEnabled = user.twoFA?.enabled || false
 
   // Use session data directly
   const fullName = [session.firstName, session.lastName].filter(Boolean).join(' ') || session.email || 'User';
@@ -56,9 +67,19 @@ export default async function Dashboard() {
                 <span className="h-2 w-2 rounded-full bg-green-400 inline-block mr-2"></span>
               </div>
               <p className="text-sm text-secondary-600 dark:text-secondary-400">
-                {session.twoFAVerified ? '2FA verification complete' : 'Authentication required'}
+                {session.twoFAVerified && '2FA verification complete' + (is2FAEnabled ? '' : ' (2FA not enabled)')}
               </p>
             </div>
+            {!is2FAEnabled && (
+              <div className="mt-2">
+                <p className="text-xs text-amber-600 dark:text-amber-400">
+                  Two-factor authentication is not enabled for your account
+                </p>
+                <a href="/2fa-setup" className="mt-1 inline-block text-xs font-medium text-primary-600 hover:text-primary-500">
+                  Enable 2FA now
+                </a>
+              </div>
+            )}
           </div>
           
           <div className="rounded-lg border border-secondary-100 dark:border-secondary-800 bg-background p-6">
@@ -82,7 +103,7 @@ export default async function Dashboard() {
             </div>
             <h3 className="mt-4 text-lg font-medium text-secondary-900 dark:text-secondary-100">Settings</h3>
             <a href="/2fa-setup" className="mt-2 inline-block text-sm font-medium text-primary-600 hover:text-primary-500">
-              Manage 2FA settings
+              {is2FAEnabled ? 'Manage 2FA settings' : 'Enable 2FA security'}
             </a>
           </div>
         </div>
@@ -100,4 +121,5 @@ export default async function Dashboard() {
     </div>
   )
 }
+
 
