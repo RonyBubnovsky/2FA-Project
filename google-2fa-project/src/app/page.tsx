@@ -1,4 +1,26 @@
-export default function Home() {
+import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
+import { getIronSession } from 'iron-session'
+import { sessionOptions } from '../lib/session'
+
+interface SessionData {
+  userId?: string
+  twoFAVerified?: boolean
+}
+
+export default async function Home() {
+  // Check if user is logged in
+  const cookieStore = await cookies()
+  const cookieValue = cookieStore.get('my2fa_session')?.value || ''
+  const req = { headers: { cookie: `my2fa_session=${cookieValue}` } } as any
+  const res = {} as any
+  const session = await getIronSession<SessionData>(req, res, sessionOptions)
+
+  // Redirect to dashboard if user is logged in and has verified 2FA
+  if (session.userId && session.twoFAVerified) {
+    redirect('/dashboard')
+  }
+
   return (
     <div className="relative isolate pt-14 lg:pt-20">
       {/* Background gradient */}

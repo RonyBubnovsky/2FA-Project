@@ -13,17 +13,29 @@ export default function Setup2FAPage() {
   const router = useRouter()
 
   useEffect(() => {
+    // Check authentication status first
     fetch('/api/auth/2fa-setup')
-      .then(r => r.json())
+      .then(r => {
+        if (r.status === 401) {
+          // User is not authenticated, redirect to login
+          router.push('/login')
+          return null
+        }
+        return r.json()
+      })
       .then(data => {
+        if (!data) return // Early return if redirect is happening
         if (data.enabled) {
           setTwoFAEnabled(true)
         } else {
           setQr(data.qr)
         }
       })
-      .catch(() => setError('Failed to load 2FA information'))
-  }, [])
+      .catch((err) => {
+        setError('Failed to load 2FA information')
+        console.error(err)
+      })
+  }, [router])
 
   async function verify(e: React.FormEvent) {
     e.preventDefault()

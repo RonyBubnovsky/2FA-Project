@@ -67,7 +67,7 @@ export default async function Dashboard() {
                 <span className="h-2 w-2 rounded-full bg-green-400 inline-block mr-2"></span>
               </div>
               <p className="text-sm text-secondary-600 dark:text-secondary-400">
-                {session.twoFAVerified && '2FA verification complete' + (is2FAEnabled ? '' : ' (2FA not enabled)')}
+                {session.twoFAVerified && 'verification complete' + (is2FAEnabled ? '' : ' (2FA not enabled)')}
               </p>
             </div>
             {!is2FAEnabled && (

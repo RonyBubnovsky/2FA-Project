@@ -11,7 +11,12 @@ export default function MobileMenu() {
     // Check if user is logged in based on the current path
     // This is a simple way to determine login status without an API call
     if (pathname) {
-      setIsLoggedIn(pathname === '/dashboard' || pathname.startsWith('/dashboard/'))
+      setIsLoggedIn(
+        pathname === '/dashboard' || 
+        pathname.startsWith('/dashboard/') ||
+        pathname === '/2fa-setup' ||
+        pathname.startsWith('/2fa-setup/')
+      )
     }
   }, [pathname])
 
