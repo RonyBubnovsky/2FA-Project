@@ -1,7 +1,8 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { Toaster, toast } from 'react-hot-toast'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -14,6 +15,7 @@ export default function LoginPage() {
   const [isChecking, setIsChecking] = useState(true)
   const [isUsingRecoveryCode, setIsUsingRecoveryCode] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
 
   // Check if user is already logged in
   useEffect(() => {
@@ -36,6 +38,33 @@ export default function LoginPage() {
     
     checkAuth()
   }, [router])
+  
+  // Check for logout success message
+  useEffect(() => {
+    if (searchParams) {
+      const status = searchParams.get('status')
+      if (status === 'logout_success') {
+        toast.success('Logged out successfully', {
+          duration: 3000,
+          position: 'top-center',
+          style: {
+            background: '#1E293B',
+            color: '#fff',
+            border: '1px solid #334155'
+          },
+          iconTheme: {
+            primary: '#10B981',
+            secondary: '#fff'
+          }
+        })
+        
+        // Remove the status param from URL without refreshing the page
+        const url = new URL(window.location.href)
+        url.searchParams.delete('status')
+        window.history.replaceState({}, '', url)
+      }
+    }
+  }, [searchParams])
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
@@ -105,6 +134,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-[80vh] flex-col items-center justify-center py-12">
+      <Toaster />
       <div className="w-full max-w-md">
         {twoFARequired ? (
           <div className="card">
