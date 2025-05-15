@@ -90,18 +90,15 @@ export default function RegisterPage() {
   
   // Check if user is already logged in
   useEffect(() => {
-    // If session cookie exists, check if we're already logged in
-    // by making a simple request to the dashboard
     async function checkAuth() {
       try {
-        const res = await fetch('/dashboard', {
-          method: 'HEAD',
-          redirect: 'manual', // Don't follow redirects
-        })
+        // Use a dedicated API endpoint to check auth status
+        const res = await fetch('/api/auth/status')
+        const data = await res.json()
         
-        // If status is 200, we weren't redirected, meaning we're authenticated
-        if (res.status === 200 || res.type === 'opaqueredirect') {
-          router.push('/dashboard')
+        if (data.authenticated) {
+          router.replace('/dashboard')
+          return
         }
       } catch (error) {
         console.error('Auth check error:', error)
