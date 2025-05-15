@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import LoadingScreen from '../components/LoadingScreen'
 
 export default function Setup2FAPage() {
   const [qr, setQr] = useState<string>()
@@ -10,6 +11,7 @@ export default function Setup2FAPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [twoFAEnabled, setTwoFAEnabled] = useState(false)
   const [showDisableConfirm, setShowDisableConfirm] = useState(false)
+  const [initialLoading, setInitialLoading] = useState(true)
   const router = useRouter()
 
   useEffect(() => {
@@ -30,10 +32,12 @@ export default function Setup2FAPage() {
         } else {
           setQr(data.qr)
         }
+        setInitialLoading(false)
       })
       .catch((err) => {
         setError('Failed to load 2FA information')
         console.error(err)
+        setInitialLoading(false)
       })
   }, [router])
 
@@ -82,6 +86,11 @@ export default function Setup2FAPage() {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  // Show loading state first
+  if (initialLoading) {
+    return <LoadingScreen message="Checking 2FA status..." />
   }
 
   // 2FA is already enabled, show management UI
