@@ -101,7 +101,7 @@ export default function Setup2FAPage() {
     }
   }
 
-  // Handle case when user confirms they've saved recovery codes
+  // Handle case when user confirms they&apos;ve saved recovery codes
   function handleRecoveryCodesContinue() {
     setShowRecoveryCodes(false)
     router.push('/dashboard')
@@ -146,7 +146,7 @@ export default function Setup2FAPage() {
                 </div>
                 <div className="ml-3">
                   <p className="text-sm text-amber-400">
-                    <strong>Important:</strong> Each code can only be used once. If you use a recovery code, your 2FA will be automatically disabled and you'll need to set it up again.
+                    <strong>Important:</strong> Each code can only be used once. If you use a recovery code, your 2FA will be automatically disabled and you&apos;ll need to set it up again.
                   </p>
                 </div>
               </div>
@@ -168,7 +168,7 @@ export default function Setup2FAPage() {
                 onClick={handleRecoveryCodesContinue}
                 className="btn btn-primary w-full py-3"
               >
-                I've Saved My Recovery Codes
+                I&apos;ve Saved My Recovery Codes
               </button>
             </div>
           </div>

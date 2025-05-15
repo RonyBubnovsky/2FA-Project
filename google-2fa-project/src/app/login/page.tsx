@@ -148,7 +148,7 @@ export default function LoginPage() {
               {isUsingRecoveryCode && (
                 <div className="bg-amber-50 dark:bg-amber-900/10 p-3 rounded-md text-sm">
                   <p className="text-amber-700 dark:text-amber-500">
-                    <strong>Note:</strong> Using a recovery code will disable 2FA on your account. You'll need to set it up again after logging in.
+                    <strong>Note:</strong> Using a recovery code will disable 2FA on your account. You&apos;ll need to set it up again after logging in.
                   </p>
                 </div>
               )}
