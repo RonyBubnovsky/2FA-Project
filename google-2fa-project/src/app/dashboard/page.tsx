@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { getIronSession } from 'iron-session'
 import { sessionOptions } from '../../lib/session'
 import LogoutButton from '../components/LogoutButton'
+import DeleteUserButton from '../components/DeleteUserButton'
 import dbConnect from '../../lib/mongodb'
 import { User } from '../../models/User'
 
@@ -50,7 +51,10 @@ export default async function Dashboard() {
               Welcome back, {fullName}
             </p>
           </div>
-          <LogoutButton />
+          <div className="flex gap-3">
+            <DeleteUserButton />
+            <LogoutButton />
+          </div>
         </div>
         
         <div className="grid gap-8 md:grid-cols-3">
