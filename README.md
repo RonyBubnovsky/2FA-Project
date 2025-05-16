@@ -105,6 +105,44 @@ This project was developed as a final project for the Software Security course, 
 
 5. Open [http://localhost:3000](http://localhost:3000) in your browser
 
+## Testing and CI/CD Pipeline
+
+This project includes comprehensive automated tests for all API endpoints, with a focus on:
+
+- Authentication flows (registration, login, logout)
+- Email verification
+- Password reset functionality
+- Two-factor authentication (setup, verification, disable)
+- Session management
+
+### Running Tests
+
+To run all tests locally:
+
+```bash
+npm test
+```
+
+To run specific test files:
+
+```bash
+npm test -- src/tests/api/auth/2fa-verify-login.test.ts
+```
+
+### Continuous Integration
+
+The project uses GitHub Actions for CI/CD with the following automated pipeline:
+
+1. Code checkout
+2. Node.js environment setup
+3. Dependency installation
+4. Linting
+5. Automated tests
+6. Build process
+7. Deployment to Vercel (if all previous steps succeed)
+
+This ensures that all code changes are verified for quality and functionality before deployment, maintaining high reliability standards.
+
 ## Deployment
 
 This project is deployed on Vercel. Visit [https://2fa-project.vercel.app/](https://2fa-project.vercel.app/) to see it in action.
