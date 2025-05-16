@@ -23,6 +23,9 @@ jobs:
       - name: Run Lint
         run: cd 2fa-project && npm run lint
 
+      - name: Run Tests
+        run: cd 2fa-project && npm test
+
       - name: Run Build
         env:
           MONGODB_URI: ${{ secrets.MONGODB_URI }}

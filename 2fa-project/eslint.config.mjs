@@ -10,6 +10,17 @@ const compat = new FlatCompat({
 });
 
 const eslintConfig = [
+  // Ignore all test files and test utility files
+  {
+    ignores: [
+      "**/tests/**/*",
+      "**/*.test.ts",
+      "**/*.test.tsx",
+      "jest.config.js",
+      "tsconfig.test.json"
+    ]
+  },
+  // Base configuration for everything else
   ...compat.extends("next/core-web-vitals", "next/typescript"),
 ];
 
