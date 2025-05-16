@@ -65,7 +65,7 @@ export default function ForgotPasswordPage() {
               </div>
               
               <div className="mt-6 text-center">
-                <Link href="/login" className="btn btn-primary">
+                <Link href="/login" className="btn btn-primary w-full py-3">
                   Return to Login
                 </Link>
               </div>
