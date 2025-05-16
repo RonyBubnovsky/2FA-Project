@@ -1,11 +1,4 @@
 import { jest } from '@jest/globals';
-import type { IUser } from '../models/User';
-
-// Mock environment variables
-process.env.HMAC_SECRET = 'test_hmac_secret';
-process.env.RECOVERY_CODE_SECRET = 'test_recovery_code_secret';
-process.env.NEXT_PUBLIC_APP_URL = 'http://localhost:3000';
-// Don't reassign NODE_ENV as it's read-only
 
 // Mock MongoDB connection
 jest.mock('../lib/mongodb', () => ({
