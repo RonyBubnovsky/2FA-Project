@@ -24,8 +24,17 @@ jobs:
         run: cd 2fa-project && npm run lint
 
       - name: Run Build
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          SESSION_PASSWORD: ${{ secrets.SESSION_PASSWORD }}
+          NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
+          EMAIL_USER: ${{ secrets.EMAIL_USER }}
+          EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
+          HMAC_SECRET: ${{ secrets.HMAC_SECRET }}
         run: cd 2fa-project && npm run build
 
       - name: Deploy to Vercel
         if: ${{ success() }}
+        env:
+          VERCEL_DEPLOY_HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK }}
         run: curl -X POST "${{ secrets.VERCEL_DEPLOY_HOOK }}"
