@@ -8,6 +8,8 @@ A secure and modern two-factor authentication (2FA) application built with Next.
 
 **Live Demo:** [https://2fa-project.vercel.app/](https://2fa-project.vercel.app/)
 
+**Note: When using Gmail SMTP service with Nodemailer, verification and password reset emails may be delivered to spam folders. Please check your spam folder if you don't receive expected emails during registration or password reset processes.**
+
 ## About
 
 This project was developed as a final project for the Software Security course, demonstrating advanced security concepts in a practical web application. It provides a complete authentication system with two-factor authentication capabilities.
@@ -74,13 +76,12 @@ This project was developed as a final project for the Software Security course, 
 3. Create a `.env.local` file in the 2fa-project directory with the following variables:
 
    ```
-   MONGODB_URI=your_mongodb_connection_string
-   EMAIL_SERVER=smtp_server
-   EMAIL_PORT=smtp_port
-   EMAIL_USER=your_email
-   EMAIL_PASSWORD=your_email_password
-   IRON_SESSION_PASSWORD=complex_random_string_at_least_32_chars
-   NEXTAUTH_URL=http://localhost:3000
+   MONGODB_URI=
+   SESSION_PASSWORD=
+   NEXT_PUBLIC_APP_URL=http://localhost:3000
+   EMAIL_USER=
+   EMAIL_PASS=
+   HMAC_SECRET=
    ```
 
 4. Run the development server
