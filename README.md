@@ -1,6 +1,6 @@
 # Two-Factor Authentication System
 
-A secure and modern two-factor authentication (2FA) application built with Next.js. This project implements industry-standard security practices for protecting user accounts through multi-factor authentication.
+A secure and modern two-factor authentication (2FA) application built with Next.js and TypeScript. This project implements industry-standard security practices for protecting user accounts through multi-factor authentication.
 
 ![2FA Security](https://img.shields.io/badge/Security-2FA-green)
 ![Next.js](https://img.shields.io/badge/Built%20with-Next.js-black)
@@ -12,7 +12,7 @@ A secure and modern two-factor authentication (2FA) application built with Next.
 
 ## About
 
-This project was developed as a final project for the Software Security course, demonstrating advanced security concepts in a practical web application. It provides a complete authentication system with two-factor authentication capabilities.
+This project was developed as a final project for the Software Security course, demonstrating advanced security concepts in a practical web application. It provides a complete authentication system with two-factor authentication capabilities built using Next.js with TypeScript.
 
 ## Features
 
@@ -45,6 +45,7 @@ This project was developed as a final project for the Software Security course, 
 - **Frontend**: React, Next.js, TailwindCSS
 - **Backend**: Next.js API routes
 - **Database**: MongoDB with Mongoose
+- **Language**: TypeScript
 - **Authentication**: Iron Session, Speakeasy (for TOTP)
 - **Email Services**: Nodemailer
 - **Security**: bcryptjs, rate-limiter-flexible
@@ -76,11 +77,23 @@ This project was developed as a final project for the Software Security course, 
 3. Create a `.env.local` file in the 2fa-project directory with the following variables:
 
    ```
+   # MongoDB connection string - Create a free MongoDB Atlas cluster and get the connection string
    MONGODB_URI=
+
+   # Session password - Generate a secure random string (min 32 characters)
    SESSION_PASSWORD=
+
+   # URL for your local development
    NEXT_PUBLIC_APP_URL=http://localhost:3000
+
+   # Gmail account (full email address)
    EMAIL_USER=
+
+   # Gmail app password (NOT your regular Gmail password)
+   # Generate this in your Google Account > Security > App passwords
    EMAIL_PASS=
+
+   # HMAC secret for additional encryption - Generate a secure random string
    HMAC_SECRET=
    ```
 
