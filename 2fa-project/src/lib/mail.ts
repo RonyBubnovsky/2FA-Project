@@ -15,9 +15,9 @@ export const transporter = nodemailer.createTransport({
 export async function sendVerificationEmail(to: string, token: string) {
   const url = `${process.env.NEXT_PUBLIC_APP_URL}/verify-email?token=${token}`
   await transporter.sendMail({
-    from: process.env.EMAIL_USER,
+    from: `"2FA App Team" <${process.env.EMAIL_USER}>`,
     to,
-    subject: 'Verify your email for Google 2FA App',
+    subject: 'Verify your email for 2FA App Project',
     text: `Please verify your email by visiting: ${url}\nThis link expires in 24 hours.`,
     html: `
       <p>Click <a href="${url}">here</a> to verify your email.</p>
@@ -28,9 +28,9 @@ export async function sendVerificationEmail(to: string, token: string) {
 
 export async function sendPasswordResetEmail(to: string, resetUrl: string) {
   await transporter.sendMail({
-    from: process.env.EMAIL_USER,
+    from: `"2FA App Team" <${process.env.EMAIL_USER}>`,
     to,
-    subject: 'Reset your password for Google 2FA App',
+    subject: 'Reset your password for 2FA App Project',
     text: `You requested a password reset. Please visit: ${resetUrl}\nThis link expires in 1 hour. If you didn't request this reset, please ignore this email.`,
     html: `
       <h1>Password Reset</h1>
