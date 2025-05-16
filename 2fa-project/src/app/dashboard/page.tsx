@@ -93,7 +93,13 @@ export default async function Dashboard() {
             </div>
             <h3 className="mt-4 text-lg font-medium text-white">Last Login</h3>
             <p className="mt-2 text-sm text-secondary-200 dark:text-secondary-300">
-              {new Date().toLocaleDateString()} at {new Date().toLocaleTimeString()}
+              {new Intl.DateTimeFormat('en-IL', {
+                dateStyle: 'medium',
+                timeZone: 'Asia/Jerusalem'
+              }).format(new Date())} at {new Intl.DateTimeFormat('en-IL', {
+                timeStyle: 'medium',
+                timeZone: 'Asia/Jerusalem'
+              }).format(new Date())}
             </p>
           </div>
           
