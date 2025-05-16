@@ -14,22 +14,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <Script id="theme-switcher" strategy="beforeInteractive">
           {`
-            function applyTheme() {
-              const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-              const userTheme = localStorage.getItem('theme');
-              
-              if (userTheme === 'dark' || (!userTheme && isDark)) {
-                document.documentElement.classList.add('dark');
-              } else {
-                document.documentElement.classList.remove('dark');
-              }
-            }
-            
-            // Apply theme on load
-            applyTheme();
-            
-            // Watch for system preference changes
-            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
+            document.documentElement.classList.add('dark');
           `}
         </Script>
       </head>
