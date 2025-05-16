@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { getIronSession, IronSession } from 'iron-session'
-import { sessionOptions } from '../../../lib/session'
+import { getSessionOptions } from '../../../lib/session'
 import speakeasy from 'speakeasy'
 import QRCode from 'qrcode'
 import dbConnect from '../../../lib/mongodb'
@@ -42,6 +42,8 @@ async function handler(req: NextApiRequest & { session: IronSession<SessionData>
 }
 
 export default async function setup2FARoute(req: NextApiRequest, res: NextApiResponse) {
-  const session = await getIronSession<SessionData>(req, res, sessionOptions)
+  // Use sessionOptions with 30 days duration to maintain the user's session during setup
+  const options = getSessionOptions(true)
+  const session = await getIronSession<SessionData>(req, res, options)
   return handler(Object.assign(req, { session }), res)
 }

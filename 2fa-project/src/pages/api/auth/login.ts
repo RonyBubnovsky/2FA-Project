@@ -3,7 +3,7 @@ import dbConnect from '../../../lib/mongodb'
 import { User } from '../../../models/User'
 import bcrypt from 'bcryptjs'
 import { getIronSession, IronSession } from 'iron-session'
-import { sessionOptions } from '../../../lib/session'
+import { getSessionOptions } from '../../../lib/session'
 import { parse } from 'cookie'
 import mongoose from 'mongoose'
 import { serialize } from 'cookie'
@@ -63,6 +63,9 @@ async function handler(req: NextApiRequest & { session: IronSession<SessionData>
 }
 
 export default async function loginRoute(req: NextApiRequest, res: NextApiResponse) {
-  const session = await getIronSession<SessionData>(req, res, sessionOptions)
+  // Get remember flag from request body for session duration
+  const { remember } = req.body as { remember?: boolean }
+  const options = getSessionOptions(!!remember)
+  const session = await getIronSession<SessionData>(req, res, options)
   return handler(Object.assign(req, { session }), res)
 }

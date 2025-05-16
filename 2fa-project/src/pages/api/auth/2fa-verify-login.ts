@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { getIronSession, IronSession } from 'iron-session'
-import { sessionOptions } from '../../../lib/session'
+import { getSessionOptions } from '../../../lib/session'
 import speakeasy from 'speakeasy'
 import dbConnect from '../../../lib/mongodb'
 import { User } from '../../../models/User'
@@ -54,6 +54,9 @@ async function handler(req: NextApiRequest & { session: IronSession<SessionData>
 }
 
 export default async function verify2FALoginRoute(req: NextApiRequest, res: NextApiResponse) {
-  const session = await getIronSession<SessionData>(req, res, sessionOptions)
+  // Get trustDevice flag from request body for session duration
+  const { trustDevice } = req.body as { trustDevice?: boolean }
+  const options = getSessionOptions(!!trustDevice)
+  const session = await getIronSession<SessionData>(req, res, options)
   return handler(Object.assign(req, { session }), res)
 }

@@ -101,7 +101,10 @@ export default function LoginPage() {
       const res = await fetch(endpoint, {
         method:'POST',
         headers:{ 'Content-Type':'application/json' },
-        body: JSON.stringify({ token, trustDevice: false })
+        body: JSON.stringify({ 
+          token, 
+          trustDevice: rememberDevice 
+        })
       })
       const data = await res.json()
       if (res.ok) router.push('/dashboard')
@@ -173,6 +176,19 @@ export default function LoginPage() {
                   className="input"
                   required
                 />
+              </div>
+              
+              <div className="flex items-center">
+                <input
+                  id="rememberDevice2FA"
+                  type="checkbox"
+                  className="h-4 w-4 rounded border-secondary-300 text-primary-600 focus:ring-primary-500 dark:border-secondary-700 dark:bg-secondary-900"
+                  checked={rememberDevice}
+                  onChange={e => setRememberDevice(e.target.checked)}
+                />
+                <label htmlFor="rememberDevice2FA" className="ml-2 block text-sm text-secondary-700 dark:text-secondary-300">
+                  Remember this device for 30 days
+                </label>
               </div>
               
               {isUsingRecoveryCode && (

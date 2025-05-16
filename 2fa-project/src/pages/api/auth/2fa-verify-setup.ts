@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { getIronSession, IronSession } from 'iron-session'
-import { sessionOptions } from '../../../lib/session'
+import { getSessionOptions } from '../../../lib/session'
 import speakeasy from 'speakeasy'
 import dbConnect from '../../../lib/mongodb'
 import { User } from '../../../models/User'
@@ -90,6 +90,8 @@ async function handler(req: NextApiRequest & { session: IronSession<SessionData>
 }
 
 export default async function verify2FASetupRoute(req: NextApiRequest, res: NextApiResponse) {
-  const session = await getIronSession<SessionData>(req, res, sessionOptions)
+  // Use sessionOptions with 30 days duration to maintain the user's session during verification
+  const options = getSessionOptions(true)
+  const session = await getIronSession<SessionData>(req, res, options)
   return handler(Object.assign(req, { session }), res)
 }
