@@ -63,7 +63,7 @@ This project was developed as a final project for the Software Security course, 
 1. Clone the repository
 
    ```bash
-   git clone https://github.com/yourusername/2FA-Project.git
+   git clone https://github.com/RonyBubnovsky/2FA-Project.git
    cd 2FA-Project
    ```
 
