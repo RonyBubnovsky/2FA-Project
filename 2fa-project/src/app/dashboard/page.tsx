@@ -4,6 +4,7 @@ import { getIronSession } from 'iron-session'
 import { sessionOptions } from '../../lib/session'
 import LogoutButton from '../components/LogoutButton'
 import DeleteUserButton from '../components/DeleteUserButton'
+import ErrorToast from '../components/ErrorToast'
 import dbConnect from '../../lib/mongodb'
 import { User } from '../../models/User'
 
@@ -41,6 +42,7 @@ export default async function Dashboard() {
 
   return (
     <div className="max-w-7xl mx-auto">
+      <ErrorToast />
       <div className="rounded-lg border border-secondary-300 dark:border-secondary-600 bg-secondary-800 dark:bg-secondary-900 p-8 shadow-soft-xl text-white">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
           <div>
