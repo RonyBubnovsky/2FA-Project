@@ -35,10 +35,18 @@ This project was developed as a final project for the Software Security course, 
   - Device recognition system to reduce 2FA prompts
 
 - **User Dashboard**
+
   - Manage 2FA settings
   - View account details
   - Regenerate recovery codes
   - Manage trusted devices
+
+- **2FA Security Quiz**
+  - Interactive educational quiz with 10 questions about 2FA security
+  - Accessible only to users with 2FA enabled
+  - Responsive design for all devices
+  - Educational content to increase security awareness
+  - Modern UI with question progress tracking
 
 ## Technology Stack
 
