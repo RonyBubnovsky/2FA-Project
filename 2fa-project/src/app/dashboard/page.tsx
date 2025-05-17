@@ -4,6 +4,7 @@ import { getIronSession } from 'iron-session'
 import { sessionOptions } from '../../lib/session'
 import LogoutButton from '../components/LogoutButton'
 import DeleteUserButton from '../components/DeleteUserButton'
+import ErrorToast from '../components/ErrorToast'
 import dbConnect from '../../lib/mongodb'
 import { User } from '../../models/User'
 
@@ -41,6 +42,7 @@ export default async function Dashboard() {
 
   return (
     <div className="max-w-7xl mx-auto">
+      <ErrorToast />
       <div className="rounded-lg border border-secondary-300 dark:border-secondary-600 bg-secondary-800 dark:bg-secondary-900 p-8 shadow-soft-xl text-white">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
           <div>
@@ -121,9 +123,50 @@ export default async function Dashboard() {
           <h2 className="text-xl font-display font-bold text-white mb-4">
             Protected Content
           </h2>
-          <div className="bg-secondary-900 p-4 rounded-lg border-2 border-secondary-300 dark:border-secondary-600 text-secondary-200 dark:text-secondary-300 shadow-lg">
-            <p>This page is protected and cannot be accessed if no active session is available.</p>
-            <p>You can only see this content after successfully verifying your identity.</p>
+          <div className="grid gap-8 md:grid-cols-2">
+            <div className="bg-secondary-900 p-6 rounded-lg border-2 border-secondary-300 dark:border-secondary-600 text-secondary-200 dark:text-secondary-300 shadow-lg">
+              <h3 className="text-lg font-medium text-white mb-2">Secure Access</h3>
+              <p>This page is protected and cannot be accessed if no active session is available.</p>
+              <p>You can only see this content after successfully verifying your identity.</p>
+            </div>
+            
+            <div className="bg-secondary-900 p-6 rounded-lg border-2 border-secondary-300 dark:border-secondary-600 text-secondary-200 dark:text-secondary-300 shadow-lg">
+              <div className="flex items-center mb-3">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-500 dark:bg-primary-700 text-white mr-3">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342M6.75 15a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm0 0v-3.675A55.378 55.378 0 0 1 12 8.443m-7.007 11.55A5.981 5.981 0 0 0 6.75 15.75v-1.5" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-medium text-white">2FA Security Quiz</h3>
+              </div>
+              
+              {is2FAEnabled ? (
+                <>
+                  <p className="mb-4">Test your knowledge about Two-Factor Authentication security with our interactive quiz. Available exclusively for users with 2FA enabled.</p>
+                  <a href="/2fa-quiz" className="inline-block mt-2 text-sm font-medium px-4 py-2 bg-primary-600 hover:bg-primary-500 text-white rounded-md transition-colors duration-200">
+                    Take the Quiz
+                  </a>
+                </>
+              ) : (
+                <>
+                  <div className="p-3 border border-amber-600/30 bg-amber-950/20 rounded-md mb-4">
+                    <div className="flex items-start">
+                      <svg className="h-5 w-5 text-amber-400 mt-0.5 mr-2 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                        <path fillRule="evenodd" d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003ZM12 8.25a.75.75 0 0 1 .75.75v3.75a.75.75 0 0 1-1.5 0V9a.75.75 0 0 1 .75-.75Zm0 8.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" clipRule="evenodd" />
+                      </svg>
+                      <p className="text-amber-400 text-sm">This quiz is only available for accounts with 2FA enabled</p>
+                    </div>
+                  </div>
+                  <p className="mb-4">Enable Two-Factor Authentication to access our interactive security quiz and test your knowledge of 2FA concepts and best practices.</p>
+                  <a href="/2fa-setup" className="inline-block mt-2 text-sm font-medium px-4 py-2 bg-primary-600 hover:bg-primary-500 text-white rounded-md transition-colors duration-200 flex items-center">
+                    <svg className="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                      <path fillRule="evenodd" d="M12 1.5a5.25 5.25 0 0 0-5.25 5.25v3a3 3 0 0 0-3 3v6.75a3 3 0 0 0 3 3h10.5a3 3 0 0 0 3-3v-6.75a3 3 0 0 0-3-3v-3c0-2.9-2.35-5.25-5.25-5.25Zm3.75 8.25v-3a3.75 3.75 0 1 0-7.5 0v3h7.5Z" clipRule="evenodd" />
+                    </svg>
+                    Enable 2FA Now
+                  </a>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>

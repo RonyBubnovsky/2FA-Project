@@ -7,6 +7,9 @@ export default function MobileMenu() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const pathname = usePathname()
   
+  // Check if the current page is the quiz results page
+  const isQuizResults = pathname?.startsWith('/2fa-quiz') && pathname?.includes('?results=true');
+  
   useEffect(() => {
     // Check if user is logged in based on the current path
     // This is a simple way to determine login status without an API call
@@ -15,7 +18,9 @@ export default function MobileMenu() {
         pathname === '/dashboard' || 
         pathname.startsWith('/dashboard/') ||
         pathname === '/2fa-setup' ||
-        pathname.startsWith('/2fa-setup/')
+        pathname.startsWith('/2fa-setup/') ||
+        pathname === '/2fa-quiz' ||
+        pathname.startsWith('/2fa-quiz/')
       )
     }
   }, [pathname])
@@ -38,7 +43,13 @@ export default function MobileMenu() {
                   Get Started
                 </a>
               </>
+            ) : isQuizResults ? (
+              // Only show Dashboard button on quiz results page
+              <a href="/dashboard" className="bg-secondary-700 hover:bg-secondary-600 text-white hover:text-white font-medium px-5 py-2.5 rounded-md transition-colors duration-200">
+                Dashboard
+              </a>
             ) : (
+              // Standard logged-in navigation
               <a href="/dashboard" className="bg-secondary-700 hover:bg-secondary-600 text-white hover:text-white font-medium px-5 py-2.5 rounded-md transition-colors duration-200">
                 Dashboard
               </a>
@@ -87,6 +98,9 @@ export default function MobileMenu() {
                     <a href="/login" className="block w-full py-3 font-medium text-center bg-secondary-800 text-white hover:text-white rounded-md hover:bg-secondary-700 transition-colors duration-200">Sign In</a>
                     <a href="/register" className="block w-full py-3 font-medium text-center bg-primary-600 text-white hover:text-white rounded-md hover:bg-primary-500 transition-colors duration-200">Get Started</a>
                   </>
+                ) : isQuizResults ? (
+                  // Only show Dashboard button on quiz results page
+                  <a href="/dashboard" className="block w-full py-3 font-medium text-center bg-secondary-700 text-white hover:text-white rounded-md hover:bg-secondary-600 transition-colors duration-200">Dashboard</a>
                 ) : (
                   <>
                     <a href="/dashboard" className="block w-full py-3 font-medium text-center bg-secondary-700 text-white hover:text-white rounded-md hover:bg-secondary-600 transition-colors duration-200">Dashboard</a>
