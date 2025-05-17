@@ -81,6 +81,7 @@ export default function LoginPage() {
         setTwoFARequired(true)
       } else if (res.ok) {
         router.push('/dashboard')
+        return
       } else {
         setError(data.error)
       }
@@ -107,7 +108,10 @@ export default function LoginPage() {
         })
       })
       const data = await res.json()
-      if (res.ok) router.push('/dashboard')
+      if (res.ok) {
+        router.push('/dashboard')
+        return
+      }
       else setError(data.error)
     } catch (error) {
       setError('An unexpected error occurred')
