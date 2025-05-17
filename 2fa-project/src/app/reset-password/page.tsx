@@ -210,7 +210,8 @@ export default function ResetPasswordPage() {
               </div>
               
               <div className="mt-6 text-center">
-                <Link href="/login" className="btn btn-primary">
+                <Link href="/login" 
+                  className="inline-flex justify-center items-center px-5 py-2.5 rounded-md font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-sm transition-all duration-200 ease-in-out">
                   Go to Login
                 </Link>
               </div>
