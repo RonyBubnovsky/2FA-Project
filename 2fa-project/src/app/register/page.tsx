@@ -375,13 +375,13 @@ export default function RegisterPage() {
                 <div className="w-full border-t border-secondary-200 dark:border-secondary-800"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-background text-secondary-500 dark:text-secondary-400">
+                <span className="px-2 bg-card text-secondary-500 dark:bg-secondary-900 dark:text-secondary-400">
                   Already have an account?
                 </span>
               </div>
             </div>
             <div className="mt-6">
-              <a href="/login" className="btn btn-outline w-full py-3">
+              <a href="/login" className="btn btn-outline w-full py-3 hover:text-white">
                 Sign in
               </a>
             </div>
