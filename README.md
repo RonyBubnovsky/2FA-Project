@@ -33,6 +33,7 @@ This project was developed as a final project for the Software Security course, 
   - Rate limiting to prevent abuse
   - Trusted device management
   - Device recognition system to reduce 2FA prompts
+  - Google reCAPTCHA protection during registration
 
 - **User Dashboard**
 
@@ -103,7 +104,23 @@ This project was developed as a final project for the Software Security course, 
 
    # HMAC secret for additional encryption - Generate a secure random string
    HMAC_SECRET=
+
+   # Google reCAPTCHA v2 keys for bot protection
+   # Get these from https://www.google.com/recaptcha/admin/
+   NEXT_PUBLIC_RECAPTCHA_SITE_KEY=
+   RECAPTCHA_SECRET_KEY=
    ```
+
+   To obtain your reCAPTCHA keys:
+
+   1. Go to the [Google reCAPTCHA Admin Console](https://www.google.com/recaptcha/admin/)
+   2. Sign in with your Google account
+   3. Click "Create" button to add a new site
+   4. Choose reCAPTCHA v2 ("I'm not a robot" Checkbox)
+   5. Add your domain (use "localhost" for local development)
+   6. Accept the terms of service and click "Submit"
+   7. Copy the "Site key" as NEXT_PUBLIC_RECAPTCHA_SITE_KEY
+   8. Copy the "Secret key" as RECAPTCHA_SECRET_KEY
 
 4. Run the development server
 
