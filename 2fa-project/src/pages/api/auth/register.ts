@@ -6,6 +6,13 @@ import { sendVerificationEmail } from '../../../lib/mail'
 import { v4 as uuidv4 } from 'uuid'
 import crypto from 'crypto'
 import fetch from 'node-fetch'
+import { RateLimiterMemory } from 'rate-limiter-flexible'
+
+// Rate limiter configuration: 5 registration attempts per hour from the same IP
+const rateLimiter = new RateLimiterMemory({
+  points: 5, // 5 registration attempts
+  duration: 3600, // per 1 hour
+})
 
 // Validation functions
 const isValidEmail = (email: string) => {
@@ -63,6 +70,15 @@ interface MongooseValidationError extends Error {
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).end()
+  
+  // Apply rate limiting based on IP address
+  const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress) as string
+  
+  try {
+    await rateLimiter.consume(ip)
+  } catch {
+    return res.status(429).json({ error: 'Too many registration attempts. Please try again later.' })
+  }
   
   const { email, firstName, lastName, password, captchaToken } = req.body
   
