@@ -131,6 +131,61 @@ export default function RegisterPage() {
     return minLength && hasUppercase && hasLowercase && hasNumber && hasSpecial;
   }
   
+  const handleFirstNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // Only allow letters and spaces
+    if (value === '' || /^[a-zA-Z\s]+$/.test(value)) {
+      setFirstName(value);
+      // Clear validation error if it exists
+      if (validationErrors.firstName) {
+        setValidationErrors({...validationErrors, firstName: undefined});
+      }
+    } else {
+      setValidationErrors({...validationErrors, firstName: 'First name should contain only letters'});
+    }
+  }
+
+  const handleLastNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // Only allow letters and spaces
+    if (value === '' || /^[a-zA-Z\s]+$/.test(value)) {
+      setLastName(value);
+      // Clear validation error if it exists
+      if (validationErrors.lastName) {
+        setValidationErrors({...validationErrors, lastName: undefined});
+      }
+    } else {
+      setValidationErrors({...validationErrors, lastName: 'Last name should contain only letters'});
+    }
+  }
+
+  const handleConfirmPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setConfirmPassword(value);
+    
+    // Check if passwords match and clear error if they do
+    if (password === value) {
+      setValidationErrors({...validationErrors, confirmPassword: undefined});
+    } else if (value) { // Only show error if user has typed something
+      setValidationErrors({...validationErrors, confirmPassword: 'Passwords do not match'});
+    }
+  }
+
+  // Also update password change to check confirmPassword match
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setPassword(value);
+    
+    // Check if confirm password has been entered and if they match
+    if (confirmPassword) {
+      if (value === confirmPassword) {
+        setValidationErrors({...validationErrors, confirmPassword: undefined});
+      } else {
+        setValidationErrors({...validationErrors, confirmPassword: 'Passwords do not match'});
+      }
+    }
+  }
+
   // Form validation
   const validateForm = () => {
     const errors: {
@@ -150,12 +205,12 @@ export default function RegisterPage() {
     }
     
     // Name validations
-    if (firstName && !/^[a-zA-Z\s]+$/.test(firstName)) {
-      errors.firstName = 'First name should contain only letters';
+    if (!firstName) {
+      errors.firstName = 'First name is required';
     }
     
-    if (lastName && !/^[a-zA-Z\s]+$/.test(lastName)) {
-      errors.lastName = 'Last name should contain only letters';
+    if (!lastName) {
+      errors.lastName = 'Last name is required';
     }
     
     // Password validation
@@ -329,7 +384,7 @@ export default function RegisterPage() {
                   autoComplete="given-name"
                   placeholder="John"
                   value={firstName}
-                  onChange={e => setFirstName(e.target.value)}
+                  onChange={handleFirstNameChange}
                   className={`input ${validationErrors.firstName ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
                   required
                 />
@@ -348,7 +403,7 @@ export default function RegisterPage() {
                   autoComplete="family-name"
                   placeholder="Doe"
                   value={lastName}
-                  onChange={e => setLastName(e.target.value)}
+                  onChange={handleLastNameChange}
                   className={`input ${validationErrors.lastName ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
                   required
                 />
@@ -368,7 +423,7 @@ export default function RegisterPage() {
                 autoComplete="new-password"
                 placeholder="••••••••"
                 value={password}
-                onChange={e => setPassword(e.target.value)}
+                onChange={handlePasswordChange}
                 className={`input ${validationErrors.password ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
                 required
               />
@@ -388,7 +443,7 @@ export default function RegisterPage() {
                 autoComplete="new-password"
                 placeholder="••••••••"
                 value={confirmPassword}
-                onChange={e => setConfirmPassword(e.target.value)}
+                onChange={handleConfirmPasswordChange}
                 className={`input ${validationErrors.confirmPassword ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
                 required
               />
