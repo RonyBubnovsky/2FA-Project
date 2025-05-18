@@ -5,6 +5,7 @@ import bcrypt from 'bcryptjs'
 import { sendVerificationEmail } from '../../../lib/mail'
 import { v4 as uuidv4 } from 'uuid'
 import crypto from 'crypto'
+import fetch from 'node-fetch'
 
 // Validation functions
 const isValidEmail = (email: string) => {
@@ -28,6 +29,33 @@ const isValidPassword = (password: string) => {
   return minLength && hasUppercase && hasLowercase && hasNumber && hasSpecial
 }
 
+// Define reCAPTCHA response interface
+interface RecaptchaResponse {
+  success: boolean;
+  challenge_ts?: string;
+  hostname?: string;
+  'error-codes'?: string[];
+}
+
+// Verify reCAPTCHA token
+async function verifyCaptcha(token: string): Promise<boolean> {
+  try {
+    const response = await fetch('https://www.google.com/recaptcha/api/siteverify', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: `secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${token}`,
+    });
+
+    const data = await response.json() as RecaptchaResponse;
+    return !!data.success;
+  } catch (error) {
+    console.error('reCAPTCHA verification error:', error);
+    return false;
+  }
+}
+
 // Mongoose validation error interface
 interface MongooseValidationError extends Error {
   errors: Record<string, { message: string }>;
@@ -36,11 +64,22 @@ interface MongooseValidationError extends Error {
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).end()
   
-  const { email, firstName, lastName, password } = req.body
+  const { email, firstName, lastName, password, captchaToken } = req.body
   
   // Validate required fields
   if (!email || !password) {
     return res.status(400).json({ error: 'Email and password are required' })
+  }
+  
+  // Verify CAPTCHA first before proceeding
+  if (!captchaToken) {
+    return res.status(400).json({ error: 'CAPTCHA verification is required' })
+  }
+  
+  // Verify the CAPTCHA token with Google's API
+  const isValidCaptcha = await verifyCaptcha(captchaToken)
+  if (!isValidCaptcha) {
+    return res.status(400).json({ error: 'CAPTCHA verification failed. Please try again.' })
   }
   
   // Email validation
