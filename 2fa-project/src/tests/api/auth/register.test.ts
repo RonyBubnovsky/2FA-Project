@@ -22,6 +22,10 @@ jest.mock('crypto', () => ({
   }),
 }));
 
+// Mock fetch module - we need to control its behavior in individual tests
+const mockFetch = jest.fn();
+jest.mock('node-fetch', () => mockFetch);
+
 // Import handler
 let handler: any;
 
@@ -31,10 +35,16 @@ describe('register API', () => {
     firstName: 'Test',
     lastName: 'User',
     password: 'Password123!',
+    captchaToken: 'valid-captcha-token',
   };
 
   beforeEach(() => {
     jest.clearAllMocks();
+    
+    // Default mock for fetch - successful CAPTCHA validation
+    mockFetch.mockResolvedValue({
+      json: jest.fn().mockResolvedValue({ success: true })
+    });
     
     // Reset mocks
     (User.findOne as jest.Mock).mockReset();
@@ -73,6 +83,35 @@ describe('register API', () => {
     expect(res._getJSONData()).toEqual({ ok: true });
   });
 
+  it('should reject when captcha verification fails', async () => {
+    // Set fetch to return failed CAPTCHA verification
+    mockFetch.mockResolvedValueOnce({
+      json: jest.fn().mockResolvedValue({ success: false })
+    });
+
+    const req = createMockRequest('POST', validUser);
+    const res = createMockResponse();
+
+    await handler(req, res);
+
+    expect(res._getStatusCode()).toBe(400);
+    expect(res._getJSONData()).toEqual({ error: 'CAPTCHA verification failed. Please try again.' });
+    expect(User.create).not.toHaveBeenCalled();
+  });
+
+  it('should reject when captcha token is missing', async () => {
+    const { captchaToken, ...userWithoutCaptcha } = validUser;
+    
+    const req = createMockRequest('POST', userWithoutCaptcha);
+    const res = createMockResponse();
+
+    await handler(req, res);
+
+    expect(res._getStatusCode()).toBe(400);
+    expect(res._getJSONData()).toEqual({ error: 'CAPTCHA verification is required' });
+    expect(User.create).not.toHaveBeenCalled();
+  });
+
   // Negative tests
   it('should reject invalid request method', async () => {
     const req = createMockRequest('GET');
@@ -85,11 +124,9 @@ describe('register API', () => {
   });
 
   it('should reject when email is missing', async () => {
-    const req = createMockRequest('POST', {
-      firstName: 'Test',
-      lastName: 'User',
-      password: 'Password123!',
-    });
+    const { email, ...userWithoutEmail } = validUser;
+    
+    const req = createMockRequest('POST', userWithoutEmail);
     const res = createMockResponse();
 
     await handler(req, res);
@@ -99,11 +136,9 @@ describe('register API', () => {
   });
 
   it('should reject when password is missing', async () => {
-    const req = createMockRequest('POST', {
-      email: 'test@example.com',
-      firstName: 'Test',
-      lastName: 'User',
-    });
+    const { password, ...userWithoutPassword } = validUser;
+    
+    const req = createMockRequest('POST', userWithoutPassword);
     const res = createMockResponse();
 
     await handler(req, res);

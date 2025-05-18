@@ -1,6 +1,7 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import ReCAPTCHA from 'react-google-recaptcha'
 
 // Password strength component
 function PasswordStrengthMeter({ password }: { password: string }) {
@@ -79,6 +80,8 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [isChecking, setIsChecking] = useState(true)
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null)
+  const recaptchaRef = useRef<ReCAPTCHA>(null)
   const router = useRouter()
   const [validationErrors, setValidationErrors] = useState<{
     email?: string;
@@ -86,6 +89,7 @@ export default function RegisterPage() {
     lastName?: string;
     password?: string;
     confirmPassword?: string;
+    captcha?: string;
   }>({})
   
   // Check if user is already logged in
@@ -135,6 +139,7 @@ export default function RegisterPage() {
       lastName?: string;
       password?: string;
       confirmPassword?: string;
+      captcha?: string;
     } = {};
     
     // Email validation
@@ -165,8 +170,31 @@ export default function RegisterPage() {
       errors.confirmPassword = 'Passwords do not match';
     }
     
+    // CAPTCHA validation
+    if (!captchaToken) {
+      errors.captcha = 'Please complete the CAPTCHA verification';
+    }
+    
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
+  }
+
+  // Handle CAPTCHA completion
+  const handleCaptchaChange = (token: string | null) => {
+    setCaptchaToken(token);
+    
+    // Clear captcha error if present
+    if (token && validationErrors.captcha) {
+      setValidationErrors(prev => ({ ...prev, captcha: undefined }));
+    }
+  }
+
+  // Reset CAPTCHA on error
+  const resetCaptcha = () => {
+    setCaptchaToken(null);
+    if (recaptchaRef.current) {
+      recaptchaRef.current.reset();
+    }
   }
 
   async function onSubmit(e: React.FormEvent) {
@@ -187,7 +215,13 @@ export default function RegisterPage() {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, firstName, lastName, password }),
+        body: JSON.stringify({ 
+          email, 
+          firstName, 
+          lastName, 
+          password,
+          captchaToken // Include captcha token for server-side verification
+        }),
       })
       const data = await res.json()
       
@@ -199,12 +233,17 @@ export default function RegisterPage() {
         setLastName('')
         setPassword('')
         setConfirmPassword('')
+        resetCaptcha()
       } else {
         setError(data.error)
+        // Reset CAPTCHA on failure for security
+        resetCaptcha()
       }
     } catch (error) {
       setError('An unexpected error occurred')
       console.error(error)
+      // Reset CAPTCHA on any error
+      resetCaptcha()
     } finally {
       setIsLoading(false)
     }
@@ -357,6 +396,17 @@ export default function RegisterPage() {
                 <p className="mt-1 text-sm text-red-600">{validationErrors.confirmPassword}</p>
               )}
             </div>
+            
+            <div className="flex justify-center mt-4">
+              <ReCAPTCHA
+                ref={recaptchaRef}
+                sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"}
+                onChange={handleCaptchaChange}
+              />
+            </div>
+            {validationErrors.captcha && (
+              <p className="mt-1 text-sm text-red-600 text-center">{validationErrors.captcha}</p>
+            )}
             
             <div className="pt-2">
               <button
