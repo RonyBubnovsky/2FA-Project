@@ -8,6 +8,13 @@ import { parse } from 'cookie'
 import mongoose from 'mongoose'
 import { serialize } from 'cookie'
 import { v4 as uuidv4 } from 'uuid'
+import { RateLimiterMemory } from 'rate-limiter-flexible'
+
+// Rate limiter configuration: 5 login attempts per hour from the same IP
+const rateLimiter = new RateLimiterMemory({
+  points: 5, // 5 login attempts
+  duration: 3600, // per 1 hour
+})
 
 interface SessionData {
   userId?: string;
@@ -20,6 +27,16 @@ interface SessionData {
 
 async function handler(req: NextApiRequest & { session: IronSession<SessionData> }, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).end()
+  
+  // Apply rate limiting based on IP address
+  const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress) as string
+  
+  try {
+    await rateLimiter.consume(ip)
+  } catch {
+    return res.status(429).json({ error: 'Too many login attempts. Please try again later.' })
+  }
+  
   const { email, password, remember } = req.body
   await dbConnect()
   const user = await User.findOne({ email })
