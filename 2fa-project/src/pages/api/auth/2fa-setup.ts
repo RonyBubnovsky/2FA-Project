@@ -36,9 +36,18 @@ async function handler(req: NextApiRequest & { session: IronSession<SessionData>
     name: `My2FAApp (${process.env.NEXT_PUBLIC_APP_URL})`,
   })
   const qr = await QRCode.toDataURL(secret.otpauth_url!)
+  
+  // Store the secret in the session
   req.session.tempSecret = secret.base32
   await req.session.save()
-  res.json({ enabled: false, qr })
+  
+  // Don't return the actual secret directly in the response
+  // Instead, set a flag that indicates a secret is available
+  res.json({ 
+    enabled: false, 
+    qr,
+    hasSecret: true 
+  })
 }
 
 export default async function setup2FARoute(req: NextApiRequest, res: NextApiResponse) {

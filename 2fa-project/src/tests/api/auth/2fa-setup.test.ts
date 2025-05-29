@@ -101,7 +101,8 @@ describe('2FA setup API', () => {
     expect(res._getStatusCode()).toBe(200);
     expect(res._getJSONData()).toEqual({
       enabled: false,
-      qr: 'data:image/png;base64,QR_CODE_DATA'
+      qr: 'data:image/png;base64,QR_CODE_DATA',
+      hasSecret: true
     });
   });
   
