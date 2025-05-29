@@ -1,44 +1,57 @@
 import { describe, expect, it, jest, beforeEach } from '@jest/globals';
 import { createMockRequest, createMockResponse } from '../../utils/testUtils';
-import { User } from '../../../models/User';
 
-// Mock dependencies
-jest.mock('../../../lib/mongodb', () => ({
-  __esModule: true,
-  default: jest.fn().mockImplementation(() => Promise.resolve(true)),
+// Mock User model
+const mockUserFindById = jest.fn();
+jest.mock('../../../models/User', () => ({
+  User: {
+    findById: mockUserFindById
+  }
 }));
 
-// We need to access the mocked function directly
-const mockGetIronSession = jest.fn();
+// Mock rate limiting functions
+const mockIsRateLimited = jest.fn();
+const mockResetRateLimit = jest.fn();
+jest.mock('../../../utils/rateLimiting', () => ({
+  isRateLimited: mockIsRateLimited,
+  resetRateLimit: mockResetRateLimit,
+  RATE_LIMIT_MAX: 5,
+  RATE_LIMIT_WINDOW: 15 * 60 * 1000
+}));
 
-// Mock IronSession
+// Mock bcrypt
+const mockBcryptCompare = jest.fn();
+const mockBcryptHash = jest.fn();
+jest.mock('bcryptjs', () => ({
+  compare: mockBcryptCompare,
+  hash: mockBcryptHash
+}));
+
+// Mock session
+const mockGetIronSession = jest.fn();
 jest.mock('iron-session', () => ({
   getIronSession: mockGetIronSession
 }));
 
-// Mock bcrypt
-jest.mock('bcryptjs', () => ({
-  hash: jest.fn().mockResolvedValue('new-hashed-password'),
-  compare: jest.fn().mockImplementation((newPassword, oldPassword) => {
-    // Mock implementation to simulate password comparison
-    if (oldPassword === 'current-hashed-password' && newPassword === 'CurrentPassword123!') {
-      return Promise.resolve(true);
-    }
-    if (oldPassword === 'history-password-1' && newPassword === 'HistoryPassword1!') {
-      return Promise.resolve(true);
-    }
-    return Promise.resolve(false);
-  }),
+// Mock MongoDB connection
+jest.mock('../../../lib/mongodb', () => ({
+  __esModule: true,
+  default: jest.fn().mockResolvedValue(true)
 }));
 
-// Import bcrypt
-import bcrypt from 'bcryptjs';
+// Mock session options
+jest.mock('../../../lib/session', () => ({
+  sessionOptions: {
+    cookieName: 'test-cookie',
+    password: 'test-password-must-be-at-least-32-characters'
+  }
+}));
 
-// Import handler dynamically to ensure mocks are applied
-let handler: any;
+// Import the handler
+import handler from '../../../pages/api/auth/change-password';
 
 describe('change-password API', () => {
-  // Mock user data
+  // Set up mock user data
   const mockUser = {
     _id: 'user-123',
     email: 'test@example.com',
@@ -46,58 +59,67 @@ describe('change-password API', () => {
     passwordHistory: ['history-password-1', 'history-password-2', 'history-password-3'],
     twoFA: { enabled: false },
     trustedDevices: ['device1', 'device2'],
-    save: jest.fn().mockResolvedValue(true),
+    save: jest.fn().mockResolvedValue(undefined)
   };
 
   const validChangeData = {
     currentPassword: 'CurrentPassword123!',
-    newPassword: 'NewPassword123!',
+    newPassword: 'NewPassword123!'
   };
 
   beforeEach(() => {
     jest.clearAllMocks();
     
-    // Reset User model mock
-    (User.findById as jest.Mock).mockReset();
-    
-    // Set default authenticated session mock
+    // Default mock implementations
+    mockUserFindById.mockResolvedValue({ ...mockUser, save: jest.fn().mockResolvedValue(undefined) });
+    mockIsRateLimited.mockResolvedValue(false);
+    mockResetRateLimit.mockResolvedValue(undefined);
+    mockBcryptHash.mockResolvedValue('new-hashed-password');
+    mockBcryptCompare.mockImplementation((password, hash) => {
+      if (hash === 'current-hashed-password' && password === 'CurrentPassword123!') {
+        return Promise.resolve(true);
+      }
+      if (hash === 'history-password-1' && password === 'HistoryPassword1!') {
+        return Promise.resolve(true);
+      }
+      return Promise.resolve(false);
+    });
     mockGetIronSession.mockResolvedValue({
       userId: 'user-123',
       twoFAVerified: true,
       email: 'test@example.com'
     });
-    
-    // Import handler after mocks are set up
-    jest.isolateModules(() => {
-      handler = require('../../../pages/api/auth/change-password').default;
-    });
   });
 
   // Positive tests
   it('should change password with valid data', async () => {
-    // Setup mock for valid user
-    (User.findById as jest.Mock).mockResolvedValue({...mockUser});
-    
     const req = createMockRequest('POST', validChangeData);
     const res = createMockResponse();
 
     await handler(req, res);
 
-    // Verify password was changed
-    expect(User.findById).toHaveBeenCalledWith('user-123');
-    expect(bcrypt.compare).toHaveBeenCalledWith(validChangeData.currentPassword, mockUser.password);
-    expect(bcrypt.hash).toHaveBeenCalledWith(validChangeData.newPassword, 10);
-    expect(mockUser.save).toHaveBeenCalled();
+    // Verify correct functions were called
+    expect(mockUserFindById).toHaveBeenCalledWith('user-123');
+    expect(mockBcryptCompare).toHaveBeenCalledWith(validChangeData.currentPassword, mockUser.password);
+    expect(mockBcryptHash).toHaveBeenCalledWith(validChangeData.newPassword, 10);
+    expect(mockIsRateLimited).toHaveBeenCalledWith('user-123', 'change-password');
+    expect(mockResetRateLimit).toHaveBeenCalledWith('user-123', 'change-password');
+    
+    // Verify response
     expect(res._getStatusCode()).toBe(200);
     expect(res._getJSONData()).toMatchObject({
       success: true,
+      message: 'Password changed successfully'
     });
   });
 
   it('should update password history when changing password', async () => {
-    // Setup mock for valid user
-    const userWithHistory = {...mockUser};
-    (User.findById as jest.Mock).mockResolvedValue(userWithHistory);
+    // Setup mock for valid user with its own copy to track changes
+    const userWithHistory = {
+      ...mockUser,
+      save: jest.fn().mockResolvedValue(undefined)
+    };
+    mockUserFindById.mockResolvedValue(userWithHistory);
     
     const req = createMockRequest('POST', validChangeData);
     const res = createMockResponse();
@@ -107,6 +129,7 @@ describe('change-password API', () => {
     // Verify password history was updated
     expect(userWithHistory.passwordHistory).toContain('current-hashed-password');
     expect(userWithHistory.password).toBe('new-hashed-password');
+    expect(userWithHistory.save).toHaveBeenCalled();
     expect(res._getStatusCode()).toBe(200);
   });
 
@@ -115,9 +138,9 @@ describe('change-password API', () => {
     const userWith2FA = {
       ...mockUser,
       twoFA: { enabled: true },
-      save: jest.fn().mockResolvedValue(true),
+      save: jest.fn().mockResolvedValue(undefined),
     };
-    (User.findById as jest.Mock).mockResolvedValue(userWith2FA);
+    mockUserFindById.mockResolvedValue(userWith2FA);
     
     const req = createMockRequest('POST', validChangeData);
     const res = createMockResponse();
@@ -135,9 +158,9 @@ describe('change-password API', () => {
     const userWithoutHistory = {
       ...mockUser,
       passwordHistory: undefined,
-      save: jest.fn().mockResolvedValue(true),
+      save: jest.fn().mockResolvedValue(undefined),
     };
-    (User.findById as jest.Mock).mockResolvedValue(userWithoutHistory);
+    mockUserFindById.mockResolvedValue(userWithoutHistory);
     
     const req = createMockRequest('POST', validChangeData);
     const res = createMockResponse();
@@ -156,9 +179,9 @@ describe('change-password API', () => {
     const userWithFullHistory = {
       ...mockUser,
       passwordHistory: ['p1', 'p2', 'p3', 'p4', 'p5'],
-      save: jest.fn().mockResolvedValue(true),
+      save: jest.fn().mockResolvedValue(undefined),
     };
-    (User.findById as jest.Mock).mockResolvedValue(userWithFullHistory);
+    mockUserFindById.mockResolvedValue(userWithFullHistory);
     
     const req = createMockRequest('POST', validChangeData);
     const res = createMockResponse();
@@ -171,6 +194,24 @@ describe('change-password API', () => {
     expect(userWithFullHistory.passwordHistory).not.toContain('p1'); // oldest should be removed
     expect(userWithFullHistory.save).toHaveBeenCalled();
     expect(res._getStatusCode()).toBe(200);
+  });
+
+  // Rate limiting tests
+  it('should reject requests that exceed rate limit', async () => {
+    // Set up rate limiting mock to return true (user is rate limited)
+    mockIsRateLimited.mockResolvedValue(true);
+    
+    const req = createMockRequest('POST', validChangeData);
+    const res = createMockResponse();
+
+    await handler(req, res);
+
+    // Verify rate limit check was called
+    expect(mockIsRateLimited).toHaveBeenCalledWith('user-123', 'change-password');
+    
+    // Verify response indicates rate limiting
+    expect(res._getStatusCode()).toBe(429);
+    expect(res._getJSONData().error).toContain('Too many password change attempts');
   });
 
   // Negative tests
@@ -191,9 +232,6 @@ describe('change-password API', () => {
       twoFAVerified: false
     });
     
-    // Make sure user would be found if we got that far
-    (User.findById as jest.Mock).mockResolvedValue({...mockUser});
-    
     const req = createMockRequest('POST', validChangeData);
     const res = createMockResponse();
 
@@ -204,9 +242,6 @@ describe('change-password API', () => {
   });
 
   it('should reject when required fields are missing', async () => {
-    // Make sure user would be found if we got that far
-    (User.findById as jest.Mock).mockResolvedValue({...mockUser});
-    
     const req = createMockRequest('POST', { currentPassword: 'CurrentPassword123!' }); // missing newPassword
     const res = createMockResponse();
 
@@ -230,9 +265,8 @@ describe('change-password API', () => {
   });
 
   it('should reject when current password is incorrect', async () => {
-    // Setup mock for valid user
-    (User.findById as jest.Mock).mockResolvedValue({...mockUser});
-    
+    mockBcryptCompare.mockResolvedValueOnce(false); // Current password check fails
+
     const req = createMockRequest('POST', {
       currentPassword: 'WrongPassword123!',
       newPassword: 'NewPassword123!',
@@ -247,8 +281,10 @@ describe('change-password API', () => {
   });
 
   it('should reject if new password is the same as current', async () => {
-    // Setup mock for valid user
-    (User.findById as jest.Mock).mockResolvedValue({...mockUser});
+    // Mock bcrypt to simulate same password
+    mockBcryptCompare
+      .mockResolvedValueOnce(true)  // Current password check passes
+      .mockResolvedValueOnce(true); // Same as current check also passes
     
     const req = createMockRequest('POST', {
       currentPassword: 'CurrentPassword123!',
@@ -264,9 +300,6 @@ describe('change-password API', () => {
   });
 
   it('should reject if new password is in password history', async () => {
-    // Setup mock for valid user
-    (User.findById as jest.Mock).mockResolvedValue({...mockUser});
-    
     const req = createMockRequest('POST', {
       currentPassword: 'CurrentPassword123!',
       newPassword: 'HistoryPassword1!',
@@ -282,7 +315,7 @@ describe('change-password API', () => {
 
   it('should handle user not found', async () => {
     // Setup mock for non-existent user
-    (User.findById as jest.Mock).mockResolvedValue(null);
+    mockUserFindById.mockResolvedValue(null);
     
     const req = createMockRequest('POST', validChangeData);
     const res = createMockResponse();
