@@ -6,6 +6,7 @@ import Link from 'next/link'
 export default function VerifyEmailPage() {
   const [status, setStatus] = useState<'verifying' | 'success' | 'error'>('verifying')
   const [errorMessage, setErrorMessage] = useState('')
+  const [verificationToken, setVerificationToken] = useState('')
   const searchParams = useSearchParams()
   
   useEffect(() => {
@@ -28,6 +29,9 @@ export default function VerifyEmailPage() {
         
         if (response.ok) {
           setStatus('success')
+          if (data.verificationSuccessToken) {
+            setVerificationToken(data.verificationSuccessToken)
+          }
         } else {
           setStatus('error')
           setErrorMessage(data.error || 'Verification failed')
@@ -76,8 +80,11 @@ export default function VerifyEmailPage() {
                 Your email address has been successfully verified. You can now access all features.
               </p>
               <div className="flex justify-center">
-                <Link href="/dashboard" className="btn btn-primary py-2 px-6">
-                  Continue
+                <Link 
+                  href={verificationToken ? `/login?status=email_verified&token=${verificationToken}` : "/login"} 
+                  className="btn btn-primary py-2 px-6"
+                >
+                  Continue to Login
                 </Link>
               </div>
             </div>
@@ -100,8 +107,8 @@ export default function VerifyEmailPage() {
                 The verification link may be expired or invalid. Please try requesting a new verification email.
               </p>
               <div className="flex flex-col space-y-3">
-                <Link href="/dashboard" className="btn btn-primary py-2 px-6">
-                  Continue
+                <Link href="/login" className="btn btn-primary py-2 px-6">
+                  Return to Login
                 </Link>
               </div>
             </div>

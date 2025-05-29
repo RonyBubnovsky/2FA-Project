@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Toaster, toast } from 'react-hot-toast'
+import LoginToastMessage from '../components/LoginToastMessage'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -142,6 +143,7 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-[80vh] flex-col items-center justify-center py-12">
       <Toaster />
+      <LoginToastMessage />
       <div className="w-full max-w-md">
         {twoFARequired ? (
           <div className="card">

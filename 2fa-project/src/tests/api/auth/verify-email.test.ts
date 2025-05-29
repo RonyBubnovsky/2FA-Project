@@ -49,6 +49,11 @@ describe('verify-email API', () => {
       })),
     }));
     
+    // Mock uuid generation
+    jest.mock('uuid', () => ({
+      v4: jest.fn().mockReturnValue('mock-verification-token'),
+    }));
+    
     // Import handler inside beforeEach to use latest mocks
     jest.isolateModules(() => {
       handler = require('../../../pages/api/auth/verify-email').default;
@@ -76,7 +81,11 @@ describe('verify-email API', () => {
     expect(User.findOne).toHaveBeenCalled();
     expect(mockUser.save).toHaveBeenCalled();
     expect(res._getStatusCode()).toBe(200);
-    expect(res._getJSONData()).toEqual({ success: true });
+    
+    const responseData = res._getJSONData();
+    expect(responseData.success).toBe(true);
+    expect(responseData.verificationSuccessToken).toBeDefined();
+    expect(typeof responseData.verificationSuccessToken).toBe('string');
   });
 
   // Negative tests
