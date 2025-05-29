@@ -9,9 +9,15 @@ let handler: any;
 describe('verify-email API', () => {
   const mockUser = {
     emailVerified: false,
-    verificationToken: 'hashed-token',
+    verificationToken: 'test-token',
     verificationTokenExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000),
     save: jest.fn().mockResolvedValue(undefined as any),
+  };
+
+  // Mock session
+  const mockSession = {
+    userId: 'mock-user-id',
+    save: jest.fn().mockResolvedValue(undefined),
   };
 
   beforeEach(() => {
@@ -20,11 +26,28 @@ describe('verify-email API', () => {
     // Reset mocks
     (User.findOne as jest.Mock).mockReset();
     
-    // Setup crypto mock
-    jest.spyOn(crypto, 'createHmac').mockReturnValue({
+    // Mock crypto functions
+    jest.spyOn(crypto, 'createHash').mockReturnValue({
       update: jest.fn().mockReturnThis(),
       digest: jest.fn().mockReturnValue('hashed-token')
     } as any);
+    
+    jest.spyOn(crypto, 'createHmac').mockReturnValue({
+      update: jest.fn().mockReturnThis(),
+      digest: jest.fn().mockReturnValue('hmac-hashed-token')
+    } as any);
+    
+    jest.spyOn(crypto, 'timingSafeEqual').mockReturnValue(true);
+    
+    // Mock process.env
+    process.env.HMAC_SECRET = 'test-hmac-secret';
+    
+    // Mock rate limiter
+    jest.mock('rate-limiter-flexible', () => ({
+      RateLimiterMemory: jest.fn().mockImplementation(() => ({
+        consume: jest.fn().mockResolvedValue({}),
+      })),
+    }));
     
     // Import handler inside beforeEach to use latest mocks
     jest.isolateModules(() => {
@@ -35,10 +58,15 @@ describe('verify-email API', () => {
   // Positive tests
   it('should verify email with valid token', async () => {
     // Mock user find
-    (User.findOne as jest.Mock).mockResolvedValue({...mockUser} as any);
+    (User.findOne as jest.Mock).mockResolvedValue({
+      ...mockUser,
+      email: 'test@example.com',
+      _id: 'mock-user-id'
+    } as any);
     
-    // Create request with valid token
-    const req = createMockRequest('GET', {}, { token: 'valid-token' });
+    // Create request with valid token in body (now using POST)
+    const req = createMockRequest('POST', { token: 'test-token' });
+    req.session = { ...mockSession };
     const res = createMockResponse();
     
     // Call the handler
@@ -48,61 +76,68 @@ describe('verify-email API', () => {
     expect(User.findOne).toHaveBeenCalled();
     expect(mockUser.save).toHaveBeenCalled();
     expect(res._getStatusCode()).toBe(200);
-    expect(res._getJSONData()).toEqual({ ok: true });
+    expect(res._getJSONData()).toEqual({ success: true });
   });
 
   // Negative tests
   it('should reject invalid method', async () => {
-    const req = createMockRequest('POST');
+    const req = createMockRequest('GET');
+    req.session = { ...mockSession };
     const res = createMockResponse();
     
     await handler(req, res);
     
-    expect(res._getStatusCode()).toBe(400);
+    expect(res._getStatusCode()).toBe(405);
   });
   
   it('should reject missing token', async () => {
-    const req = createMockRequest('GET');
+    const req = createMockRequest('POST', {});
+    req.session = { ...mockSession };
     const res = createMockResponse();
     
     await handler(req, res);
     
     expect(res._getStatusCode()).toBe(400);
+    expect(res._getJSONData()).toEqual({ error: 'Verification token is required' });
   });
   
   it('should reject when user not found', async () => {
     (User.findOne as jest.Mock).mockResolvedValue(null as any);
     
-    const req = createMockRequest('GET', {}, { token: 'invalid-token' });
+    const req = createMockRequest('POST', { token: 'invalid-token' });
+    req.session = { ...mockSession };
     const res = createMockResponse();
     
     await handler(req, res);
     
     expect(res._getStatusCode()).toBe(400);
-    expect(res._getJSONData()).toEqual({ error: 'Invalid or expired token' });
+    expect(res._getJSONData()).toEqual({ error: 'Invalid or expired verification token' });
   });
   
-  it('should reject expired token', async () => {
+  it('should update session emailVerified flag when user is logged in', async () => {
+    // Mock user find
     (User.findOne as jest.Mock).mockResolvedValue({
       ...mockUser,
-      verificationTokenExpiry: new Date(Date.now() - 1000), // expired
+      email: 'test@example.com',
+      _id: 'mock-user-id'
     } as any);
     
-    const req = createMockRequest('GET', {}, { token: 'expired-token' });
+    const req = createMockRequest('POST', { token: 'test-token' });
+    req.session = { 
+      userId: 'mock-user-id',
+      save: jest.fn().mockResolvedValue(undefined) 
+    };
+    
     const res = createMockResponse();
     
     await handler(req, res);
     
-    expect(res._getStatusCode()).toBe(400);
-    expect(res._getJSONData()).toEqual({ error: 'Invalid or expired token' });
+    expect(req.session.emailVerified).toBe(true);
+    expect(req.session.save).toHaveBeenCalled();
   });
   
   it('should handle rate limiting', async () => {
     // Mock rate limiting error directly in the handler
-    // First set up a successful user find to reach the rate limiter code
-    (User.findOne as jest.Mock).mockResolvedValue({...mockUser} as any);
-    
-    // Then mock the API handler itself to simulate rate limiting
     jest.isolateModules(() => {
       // Import the module to be mocked
       const rateLimiter = require('rate-limiter-flexible');
@@ -115,12 +150,13 @@ describe('verify-email API', () => {
       handler = require('../../../pages/api/auth/verify-email').default;
     });
     
-    const req = createMockRequest('GET', {}, { token: 'valid-token' });
+    const req = createMockRequest('POST', { token: 'test-token' });
+    req.session = { ...mockSession };
     const res = createMockResponse();
     
     await handler(req, res);
     
     expect(res._getStatusCode()).toBe(429);
-    expect(res._getJSONData()).toEqual({ error: 'Too many attempts, try later.' });
+    expect(res._getJSONData()).toEqual({ error: 'Too many verification attempts. Please try again later.' });
   });
 }); 
