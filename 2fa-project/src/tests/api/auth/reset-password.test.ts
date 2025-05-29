@@ -6,6 +6,16 @@ import { User } from '../../../models/User';
 // Mock bcrypt module globally
 jest.mock('bcryptjs', () => ({
   hash: jest.fn().mockResolvedValue('new-hashed-password'),
+  compare: jest.fn().mockImplementation((newPassword, oldPassword) => {
+    // Mock implementation to simulate password comparison
+    if (oldPassword === 'old-hashed-password' && newPassword === 'SamePassword123!') {
+      return Promise.resolve(true);
+    }
+    if (oldPassword === 'history-password-1' && newPassword === 'HistoryPassword1!') {
+      return Promise.resolve(true);
+    }
+    return Promise.resolve(false);
+  }),
 }));
 
 // Get the mocked version
@@ -21,13 +31,14 @@ describe('reset-password API', () => {
     digest: jest.fn().mockReturnValue('hashed-token'),
   };
   
-  // Mock user data
+  // Mock user data with password history
   const mockUser = {
     password: 'old-hashed-password',
     resetPasswordToken: 'hashed-token',
     resetPasswordExpires: new Date(Date.now() + 3600000), // 1 hour in the future
     twoFA: { enabled: false },
     trustedDevices: ['device1', 'device2'],
+    passwordHistory: ['history-password-1', 'history-password-2', 'history-password-3'],
     save: jest.fn().mockResolvedValue(true as any),
   };
   
@@ -76,6 +87,56 @@ describe('reset-password API', () => {
     });
   });
 
+  it('should update password history when resetting password', async () => {
+    // Setup mock for valid token
+    const userWithHistory = {...mockUser};
+    (User.findOne as jest.Mock).mockResolvedValue(userWithHistory as any);
+    
+    const req = createMockRequest('POST', validResetData);
+    const res = createMockResponse();
+
+    await handler(req, res);
+
+    // Verify password history was updated
+    expect(userWithHistory.passwordHistory).toContain('old-hashed-password');
+    expect(userWithHistory.password).toBe('new-hashed-password');
+    expect(res._getStatusCode()).toBe(200);
+  });
+
+  it('should reject if new password is the same as current password', async () => {
+    // Setup mock for valid token
+    (User.findOne as jest.Mock).mockResolvedValue({...mockUser} as any);
+    
+    const req = createMockRequest('POST', {
+      ...validResetData,
+      password: 'SamePassword123!', // This will match with the current password in our mock
+    });
+    const res = createMockResponse();
+
+    await handler(req, res);
+
+    // Verify password change was rejected
+    expect(res._getStatusCode()).toBe(400);
+    expect(res._getJSONData().error).toContain('cannot be the same as your current password');
+  });
+
+  it('should reject if new password is in password history', async () => {
+    // Setup mock for valid token
+    (User.findOne as jest.Mock).mockResolvedValue({...mockUser} as any);
+    
+    const req = createMockRequest('POST', {
+      ...validResetData,
+      password: 'HistoryPassword1!', // This will match with a password in history
+    });
+    const res = createMockResponse();
+
+    await handler(req, res);
+
+    // Verify password change was rejected
+    expect(res._getStatusCode()).toBe(400);
+    expect(res._getJSONData().error).toContain('cannot be the same as any of your last 5 passwords');
+  });
+
   it('should clear trusted devices when user has 2FA enabled', async () => {
     // Setup mock with 2FA enabled
     const userWith2FA = {
@@ -90,7 +151,51 @@ describe('reset-password API', () => {
 
     await handler(req, res);
 
+    expect(userWith2FA.trustedDevices).toEqual([]);
     expect(userWith2FA.save).toHaveBeenCalled();
+    expect(res._getStatusCode()).toBe(200);
+  });
+
+  it('should initialize passwordHistory if it doesn\'t exist', async () => {
+    // Setup mock with no password history
+    const userWithoutHistory = {
+      ...mockUser,
+      passwordHistory: undefined,
+      save: jest.fn().mockResolvedValue(true as any),
+    };
+    (User.findOne as jest.Mock).mockResolvedValue(userWithoutHistory as any);
+    
+    const req = createMockRequest('POST', validResetData);
+    const res = createMockResponse();
+
+    await handler(req, res);
+
+    // Verify password history was created and updated
+    expect(Array.isArray(userWithoutHistory.passwordHistory)).toBe(true);
+    expect(userWithoutHistory.passwordHistory).toContain('old-hashed-password');
+    expect(userWithoutHistory.save).toHaveBeenCalled();
+    expect(res._getStatusCode()).toBe(200);
+  });
+
+  it('should limit password history to 5 entries', async () => {
+    // Setup mock with already 5 entries in password history
+    const userWithFullHistory = {
+      ...mockUser,
+      passwordHistory: ['p1', 'p2', 'p3', 'p4', 'p5'],
+      save: jest.fn().mockResolvedValue(true as any),
+    };
+    (User.findOne as jest.Mock).mockResolvedValue(userWithFullHistory as any);
+    
+    const req = createMockRequest('POST', validResetData);
+    const res = createMockResponse();
+
+    await handler(req, res);
+
+    // Verify password history was updated and limited to 5
+    expect(userWithFullHistory.passwordHistory.length).toBe(5);
+    expect(userWithFullHistory.passwordHistory).toContain('old-hashed-password');
+    expect(userWithFullHistory.passwordHistory).not.toContain('p1'); // oldest should be removed
+    expect(userWithFullHistory.save).toHaveBeenCalled();
     expect(res._getStatusCode()).toBe(200);
   });
 
@@ -149,12 +254,6 @@ describe('reset-password API', () => {
     // Create a custom date that's definitely in the past
     const pastDate = new Date();
     pastDate.setHours(pastDate.getHours() - 3); // 3 hours in the past
-    
-    // Setup mock with expired token - we need to set it directly in the mock value
-    const expiredUser = {
-      ...mockUser,
-      resetPasswordExpires: pastDate,
-    };
     
     // Mock findOne to return null - handler will interpret this as expired/invalid token
     (User.findOne as jest.Mock).mockResolvedValue(null as any);
