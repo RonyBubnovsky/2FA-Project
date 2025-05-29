@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import LoadingScreen from '../components/LoadingScreen'
+import { Toaster, toast } from 'react-hot-toast'
 
 export default function Setup2FAPage() {
   const [qr, setQr] = useState<string>()
@@ -148,6 +149,7 @@ export default function Setup2FAPage() {
   if (showRecoveryCodes) {
     return (
       <div className="flex min-h-[80vh] flex-col items-center justify-center py-12">
+        <Toaster />
         <div className="w-full max-w-md">
           <div className="card bg-secondary-800 dark:bg-secondary-900 text-white p-8 shadow-lg">
             <div className="mb-6 text-center">
@@ -189,7 +191,19 @@ export default function Setup2FAPage() {
                 onClick={() => {
                   const text = recoveryCodes.join('\n')
                   navigator.clipboard.writeText(text)
-                  alert('Recovery codes copied to clipboard')
+                  toast.success('Recovery codes copied to clipboard', {
+                    duration: 3000,
+                    position: 'top-center',
+                    style: {
+                      background: '#1E293B',
+                      color: '#fff',
+                      border: '1px solid #334155'
+                    },
+                    iconTheme: {
+                      primary: '#10B981',
+                      secondary: '#fff'
+                    }
+                  })
                 }}
                 className="btn btn-secondary w-full py-3"
               >
@@ -213,6 +227,7 @@ export default function Setup2FAPage() {
   if (twoFAEnabled) {
     return (
       <div className="flex min-h-[80vh] flex-col items-center justify-center py-12">
+        <Toaster />
         <div className="w-full max-w-md">
           <div className="card">
             <div className="mb-6 text-center">
@@ -330,6 +345,7 @@ export default function Setup2FAPage() {
   // Regular setup UI
   return (
     <div className="flex min-h-[80vh] flex-col items-center justify-center py-12">
+      <Toaster />
       <div className="w-full max-w-md">
         <div className="card">
           <div className="mb-6 text-center">
@@ -380,7 +396,19 @@ export default function Setup2FAPage() {
                       type="button"
                       onClick={() => {
                         navigator.clipboard.writeText(secret);
-                        alert('Secret key copied to clipboard');
+                        toast.success('Secret key copied to clipboard', {
+                          duration: 3000,
+                          position: 'top-center',
+                          style: {
+                            background: '#1E293B',
+                            color: '#fff',
+                            border: '1px solid #334155'
+                          },
+                          iconTheme: {
+                            primary: '#10B981',
+                            secondary: '#fff'
+                          }
+                        });
                       }}
                       className="ml-2 text-primary-600 hover:text-primary-500 focus:outline-none flex-shrink-0"
                       aria-label="Copy to clipboard"

@@ -52,10 +52,11 @@ describe('delete-account API', () => {
     expect(User.findByIdAndDelete).toHaveBeenCalledWith('mock-user-id');
     expect(setHeaderSpy).toHaveBeenCalled(); // Cookies should be cleared
     expect(res._getStatusCode()).toBe(200);
-    expect(res._getJSONData()).toMatchObject({
-      ok: true,
-      message: 'Account deleted successfully'
-    });
+    
+    const responseData = res._getJSONData();
+    expect(responseData.success).toBe(true);
+    expect(responseData.accountDeletedToken).toBeDefined();
+    expect(typeof responseData.accountDeletedToken).toBe('string');
   });
 
   // Negative tests
@@ -66,6 +67,7 @@ describe('delete-account API', () => {
     await handler(req, res);
     
     expect(res._getStatusCode()).toBe(405);
+    expect(res._getJSONData()).toEqual({ error: 'Method not allowed' });
   });
   
   it('should reject unauthenticated requests', async () => {
@@ -118,6 +120,6 @@ describe('delete-account API', () => {
     
     expect(User.findByIdAndDelete).toHaveBeenCalledWith('mock-user-id');
     expect(res._getStatusCode()).toBe(500);
-    expect(res._getJSONData()).toEqual({ error: 'Failed to delete account' });
+    expect(res._getJSONData()).toEqual({ error: 'Internal server error' });
   });
 }); 

@@ -20,7 +20,13 @@ export default function DeleteUserButton() {
       });
       
       if (response.ok) {
-        window.location.href = '/login';
+        const data = await response.json();
+        // Redirect with the server-generated token
+        if (data.success && data.accountDeletedToken) {
+          window.location.href = `/?status=account_deleted&token=${data.accountDeletedToken}`;
+        } else {
+          window.location.href = '/';
+        }
       } else {
         const data = await response.json();
         setError(data.error || 'Failed to delete account');

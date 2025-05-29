@@ -5,6 +5,7 @@ import dbConnect from '../../../lib/mongodb'
 import { User } from '../../../models/User'
 import crypto from 'crypto'
 import { RateLimiterMemory } from 'rate-limiter-flexible'
+import { v4 as uuidv4 } from 'uuid'
 
 const limiter = new RateLimiterMemory({ points: 5, duration: 3600 })
 
@@ -16,6 +17,7 @@ interface SessionData {
   twoFAVerified?: boolean;
   tempSecret?: string;
   emailVerified?: boolean;
+  emailVerificationToken?: string;
 }
 
 async function handler(req: NextApiRequest & { session: IronSession<SessionData> }, res: NextApiResponse) {
@@ -76,7 +78,15 @@ async function handler(req: NextApiRequest & { session: IronSession<SessionData>
       await req.session.save()
     }
     
-    return res.status(200).json({ success: true })
+    // Generate a secure token for verification success notification
+    const verificationSuccessToken = uuidv4()
+    req.session.emailVerificationToken = verificationSuccessToken
+    await req.session.save()
+    
+    return res.status(200).json({ 
+      success: true,
+      verificationSuccessToken 
+    })
   } catch (error) {
     console.error('Error verifying email:', error)
     return res.status(500).json({ error: 'An unexpected error occurred' })

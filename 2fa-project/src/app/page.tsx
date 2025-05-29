@@ -2,6 +2,7 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { getIronSession } from 'iron-session'
 import { sessionOptions } from '../lib/session'
+import HomeToastMessage from './components/HomeToastMessage'
 
 interface SessionData {
   userId?: string
@@ -20,6 +21,7 @@ export default async function Home() {
 
   return (
     <div className="relative isolate pt-14 lg:pt-20">
+      <HomeToastMessage />
       {/* Background gradient */}
       <div className="absolute inset-x-0 top-4 -z-10 transform-gpu overflow-hidden blur-3xl" aria-hidden="true">
         <div className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 bg-gradient-to-tr from-primary-200 to-primary-500 opacity-15 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]" 
