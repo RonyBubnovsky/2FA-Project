@@ -74,10 +74,6 @@ async function handler(req: NextApiRequest & { session: IronSession<SessionData>
     // Clear verification data
     user.verificationToken = undefined
     user.verificationTokenExpiry = undefined
-    
-    // Log verification for audit purposes
-    console.log(`Email verified: ${user.email}, verification ID: ${verificationHash}`)
-    
     await user.save()
     
     // If there's a current session, update it
