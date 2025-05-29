@@ -87,13 +87,19 @@ export const PasswordStrengthMeter = ({ password, onChange }: PasswordStrengthMe
           {[1, 2, 3, 4, 5].map((level) => (
             <motion.div
               key={level}
-              className={`h-full w-1/5 transition-colors duration-300 ease-in-out`}
-              initial={{ opacity: 0.5 }}
+              className={`h-full w-1/5 transition-colors duration-150 ease-out`}
+              initial={{ opacity: 0.5, scaleX: 0.95 }}
               animate={{ 
                 opacity: level <= strength ? 1 : 0.5,
+                scaleX: level <= strength ? 1 : 0.95,
                 backgroundColor: level <= strength ? getStrengthColor(strength) : 'rgb(229, 231, 235)' 
               }}
-              transition={{ duration: 0.3 }}
+              transition={{ 
+                duration: 0.15,
+                type: "spring",
+                stiffness: 500,
+                damping: 30
+              }}
             />
           ))}
         </div>
