@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import dbConnect from '../../../lib/mongodb'
 import { User } from '../../../models/User'
+import { isRateLimited, resetRateLimit, RATE_LIMIT_WINDOW } from '../../../utils/rateLimiting'
 import bcrypt from 'bcryptjs'
 import { getIronSession } from 'iron-session'
 import { sessionOptions } from '../../../lib/session'
@@ -34,6 +35,9 @@ interface UserWithPasswordHistory extends mongoose.Document {
   }>
 }
 
+// Endpoint name for rate limiting
+const ENDPOINT_NAME = 'change-password';
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -43,12 +47,24 @@ export default async function handler(
   }
 
   try {
+    // Connect to the database first
+    await dbConnect()
+
     // Get the session
     const session = await getIronSession<SessionData>(req, res, sessionOptions)
 
     // Check if user is authenticated
     if (!session.userId || !session.twoFAVerified) {
       return res.status(401).json({ error: 'You must be logged in to change your password' })
+    }
+    
+    // Check rate limit
+    const rateLimited = await isRateLimited(session.userId, ENDPOINT_NAME);
+    if (rateLimited) {
+      return res.status(429).json({ 
+        error: 'Too many password change attempts. Please try again later.',
+        retryAfter: Math.ceil(RATE_LIMIT_WINDOW / 1000 / 60) // minutes
+      });
     }
 
     const { currentPassword, newPassword } = req.body
@@ -65,8 +81,6 @@ export default async function handler(
         error: 'Password must be at least 8 characters long and include uppercase, lowercase, number, and special character'
       })
     }
-
-    await dbConnect()
 
     // Find the user
     const user = await User.findById(session.userId) as UserWithPasswordHistory
@@ -120,6 +134,9 @@ export default async function handler(
       user.trustedDevices = []
       await user.save()
     }
+    
+    // Remove rate limit record on successful password change
+    await resetRateLimit(session.userId, ENDPOINT_NAME);
 
     return res.status(200).json({
       success: true,
