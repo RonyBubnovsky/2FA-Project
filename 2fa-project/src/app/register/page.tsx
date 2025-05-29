@@ -2,73 +2,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import ReCAPTCHA from 'react-google-recaptcha'
-
-// Password strength component
-function PasswordStrengthMeter({ password }: { password: string }) {
-  // Calculate password strength
-  const calculateStrength = (password: string) => {
-    if (!password) return 0;
-    
-    let score = 0;
-    
-    // Length check
-    if (password.length >= 8) score += 1;
-    
-    // Character type checks
-    if (/[A-Z]/.test(password)) score += 1;
-    if (/[a-z]/.test(password)) score += 1;
-    if (/[0-9]/.test(password)) score += 1;
-    if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) score += 1;
-    
-    return score;
-  };
-  
-  const strength = calculateStrength(password);
-  
-  // Strength indicators
-  const getStrengthLabel = (strength: number) => {
-    if (strength === 0) return 'Very Weak';
-    if (strength === 1) return 'Weak';
-    if (strength === 2) return 'Fair';
-    if (strength === 3) return 'Good';
-    if (strength === 4) return 'Strong';
-    if (strength === 5) return 'Very Strong';
-    return '';
-  };
-  
-  const getStrengthColor = (strength: number) => {
-    if (strength === 0) return 'bg-red-500';
-    if (strength === 1) return 'bg-red-500';
-    if (strength === 2) return 'bg-orange-500';
-    if (strength === 3) return 'bg-yellow-500';
-    if (strength === 4) return 'bg-green-500';
-    if (strength === 5) return 'bg-green-600';
-    return '';
-  };
-  
-  return (
-    <div className="mt-1 mb-3">
-      <div className="flex h-1 w-full rounded bg-secondary-100 dark:bg-secondary-800 overflow-hidden">
-        {[1, 2, 3, 4, 5].map((level) => (
-          <div
-            key={level}
-            className={`h-full w-1/5 ${level <= strength ? getStrengthColor(strength) : 'bg-secondary-200 dark:bg-secondary-700'}`}
-          />
-        ))}
-      </div>
-      {password && (
-        <p className="text-xs mt-1 text-secondary-600 dark:text-secondary-400">
-          Password strength: <span className="font-medium">{getStrengthLabel(strength)}</span>
-        </p>
-      )}
-      {password && strength < 3 && (
-        <p className="text-xs text-red-500 mt-1">
-          Use at least 8 characters with uppercase, lowercase, numbers and special characters.
-        </p>
-      )}
-    </div>
-  );
-}
+import { PasswordStrengthMeter } from '../components/PasswordStrengthMeter'
 
 export default function RegisterPage() {
   const [email, setEmail] = useState('')
@@ -81,6 +15,7 @@ export default function RegisterPage() {
   const [error, setError] = useState('')
   const [isChecking, setIsChecking] = useState(true)
   const [captchaToken, setCaptchaToken] = useState<string | null>(null)
+  const [passwordStrength, setPasswordStrength] = useState(0)
   const recaptchaRef = useRef<ReCAPTCHA>(null)
   const router = useRouter()
   const [validationErrors, setValidationErrors] = useState<{
@@ -120,15 +55,10 @@ export default function RegisterPage() {
     return regex.test(email)
   }
   
-  // Validate password strength
-  const validatePassword = (password: string) => {
-    const minLength = password.length >= 8;
-    const hasUppercase = /[A-Z]/.test(password);
-    const hasLowercase = /[a-z]/.test(password);
-    const hasNumber = /[0-9]/.test(password);
-    const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
-    
-    return minLength && hasUppercase && hasLowercase && hasNumber && hasSpecial;
+  // Validate password
+  const validatePassword = () => {
+    // We now use our password strength meter to handle validation
+    return passwordStrength >= 3
   }
   
   const handleFirstNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -216,7 +146,7 @@ export default function RegisterPage() {
     // Password validation
     if (!password) {
       errors.password = 'Password is required';
-    } else if (!validatePassword(password)) {
+    } else if (!validatePassword()) {
       errors.password = 'Password is too weak';
     }
     
@@ -250,6 +180,11 @@ export default function RegisterPage() {
     if (recaptchaRef.current) {
       recaptchaRef.current.reset();
     }
+  }
+
+  // Handle password strength changes
+  const handlePasswordStrengthChange = (strength: number) => {
+    setPasswordStrength(strength);
   }
 
   async function onSubmit(e: React.FormEvent) {
@@ -427,7 +362,10 @@ export default function RegisterPage() {
                 className={`input ${validationErrors.password ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
                 required
               />
-              <PasswordStrengthMeter password={password} />
+              <PasswordStrengthMeter 
+                password={password} 
+                onChange={handlePasswordStrengthChange} 
+              />
               {validationErrors.password && (
                 <p className="mt-1 text-sm text-red-600">{validationErrors.password}</p>
               )}
