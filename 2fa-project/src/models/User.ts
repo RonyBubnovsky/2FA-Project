@@ -26,6 +26,7 @@ export interface IUser extends Document {
     recoveryCodes?: IRecoveryCode[]
   }
   trustedDevices?: ITrustedDevice[]
+  passwordHistory?: string[]
 }
 
 // Email validation regex
@@ -76,6 +77,7 @@ const UserSchema = new mongoose.Schema<IUser>({
       expires: Date,
     },
   ],
+  passwordHistory: [String],
 })
 
 export const User: Model<IUser> =

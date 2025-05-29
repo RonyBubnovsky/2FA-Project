@@ -4,6 +4,7 @@ import { getIronSession } from 'iron-session'
 import { sessionOptions } from '../../lib/session'
 import LogoutButton from '../components/LogoutButton'
 import DeleteUserButton from '../components/DeleteUserButton'
+import ChangePasswordButton from '../components/ChangePasswordButton'
 import ErrorToast from '../components/ErrorToast'
 import ResendVerificationButton, { ResendButtonLarge } from '../components/ResendVerificationButton'
 import dbConnect from '../../lib/mongodb'
@@ -80,7 +81,8 @@ export default async function Dashboard() {
               Welcome back, {fullName}
             </p>
           </div>
-          <div className="flex gap-5">
+          <div className="flex flex-wrap gap-2 mt-3 sm:mt-0">
+            <ChangePasswordButton />
             <DeleteUserButton />
             <LogoutButton />
           </div>

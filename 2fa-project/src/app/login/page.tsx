@@ -27,6 +27,7 @@ export default function LoginPage() {
         const data = await res.json()
         
         if (data.authenticated) {
+          // User is authenticated, redirect to dashboard
           router.replace('/dashboard')
           return
         }

@@ -39,8 +39,41 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ error: 'Invalid or expired reset token' })
   }
   
+  // Check if the new password matches the current password
+  const isSameAsCurrent = await bcrypt.compare(password, user.password)
+  if (isSameAsCurrent) {
+    return res.status(400).json({
+      error: 'Your new password cannot be the same as your current password'
+    })
+  }
+  
+  // Check if the new password is in the password history
+  if (user.passwordHistory && user.passwordHistory.length > 0) {
+    for (const oldPassword of user.passwordHistory) {
+      const isMatch = await bcrypt.compare(password, oldPassword)
+      if (isMatch) {
+        return res.status(400).json({
+          error: 'Your new password cannot be the same as any of your last 5 passwords'
+        })
+      }
+    }
+  }
+  
   // Hash the new password
   const passwordHash = await bcrypt.hash(password, 10)
+  
+  // Initialize password history if it doesn't exist
+  if (!user.passwordHistory) {
+    user.passwordHistory = []
+  }
+  
+  // Add current password to history before updating it
+  user.passwordHistory.push(user.password)
+  
+  // Keep only the last 5 passwords in history
+  if (user.passwordHistory.length > 5) {
+    user.passwordHistory = user.passwordHistory.slice(-5)
+  }
   
   // Update user with new password and clear reset tokens
   user.password = passwordHash
