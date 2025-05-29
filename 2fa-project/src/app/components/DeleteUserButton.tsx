@@ -6,6 +6,8 @@ export default function DeleteUserButton() {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [error, setError] = useState('')
+  const [confirmText, setConfirmText] = useState('')
+  const isDeleteEnabled = confirmText.toLowerCase() === 'delete'
   
   async function handleDeleteAccount() {
     try {
@@ -57,9 +59,29 @@ export default function DeleteUserButton() {
                 <h3 className="text-xl font-bold text-white">Delete Account</h3>
               </div>
               
-              <p className="text-gray-300 mb-6">
+              <p className="text-gray-300 mb-4">
                 Are you sure you want to delete your account? This action cannot be undone and will permanently delete all your data.
               </p>
+              
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Type <span className="font-bold text-red-500">delete</span> to confirm:
+                </label>
+                <input
+                  type="text"
+                  value={confirmText}
+                  onChange={(e) => setConfirmText(e.target.value)}
+                  className="w-full bg-secondary-900 border border-secondary-700 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  placeholder="delete"
+                  autoComplete="off"
+                  autoFocus
+                />
+                {confirmText && !isDeleteEnabled && (
+                  <p className="text-xs mt-1 text-red-400">
+                    Please type &quot;delete&quot; exactly as shown to continue
+                  </p>
+                )}
+              </div>
               
               {error && (
                 <div className="bg-red-900/30 p-3 rounded mb-4 text-red-300 border border-red-700">
@@ -70,7 +92,10 @@ export default function DeleteUserButton() {
               <div className="flex gap-3 mt-6">
                 <button
                   type="button"
-                  onClick={() => setIsConfirmOpen(false)}
+                  onClick={() => {
+                    setIsConfirmOpen(false)
+                    setConfirmText('')
+                  }}
                   className="flex items-center justify-center bg-gray-700 hover:bg-gray-600 text-white flex-1 py-2 rounded-md"
                   disabled={isDeleting}
                 >
@@ -82,8 +107,12 @@ export default function DeleteUserButton() {
                 <button
                   type="button"
                   onClick={handleDeleteAccount}
-                  className="flex items-center justify-center bg-red-600 hover:bg-red-700 text-white flex-1 py-2 rounded-md"
-                  disabled={isDeleting}
+                  className={`flex items-center justify-center text-white flex-1 py-2 rounded-md ${
+                    isDeleteEnabled 
+                      ? 'bg-red-600 hover:bg-red-700' 
+                      : 'bg-red-900/50 cursor-not-allowed'
+                  }`}
+                  disabled={!isDeleteEnabled || isDeleting}
                 >
                   {isDeleting ? (
                     <>
