@@ -65,12 +65,6 @@ async function handler(req: NextApiRequest & { session: IronSession<SessionData>
     // Mark email as verified
     user.emailVerified = true
     
-    // Generate verification success hash for audit logging
-    const verificationHash = crypto
-      .createHash('sha256')
-      .update(`${user._id}-${Date.now()}-verified`)
-      .digest('hex')
-      
     // Clear verification data
     user.verificationToken = undefined
     user.verificationTokenExpiry = undefined

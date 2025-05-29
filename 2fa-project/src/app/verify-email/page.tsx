@@ -1,13 +1,12 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 
 export default function VerifyEmailPage() {
   const [status, setStatus] = useState<'verifying' | 'success' | 'error'>('verifying')
   const [errorMessage, setErrorMessage] = useState('')
   const searchParams = useSearchParams()
-  const router = useRouter()
   
   useEffect(() => {
     const token = searchParams?.get('token')
@@ -104,12 +103,6 @@ export default function VerifyEmailPage() {
                 <Link href="/dashboard" className="btn btn-primary py-2 px-6">
                   Continue
                 </Link>
-                <button 
-                  onClick={() => router.push('/login')}
-                  className="text-sm text-primary-600 hover:text-primary-500"
-                >
-                  Return to Login
-                </button>
               </div>
             </div>
           )}
