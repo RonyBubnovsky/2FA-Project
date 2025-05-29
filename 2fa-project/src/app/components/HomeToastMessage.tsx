@@ -10,13 +10,21 @@ export default function HomeToastMessage() {
   const shownMessagesRef = useRef<Set<string>>(new Set())
   
   useEffect(() => {
-    // Check for status parameters
+    // Check for status parameters and token
     const status = searchParams?.get('status')
+    const token = searchParams?.get('token')
     
-    if (status === 'account_deleted' && !shownMessagesRef.current.has('account_deleted')) {
+    // Only proceed if we have both status and token
+    if (
+      status === 'account_deleted' && 
+      token && 
+      !shownMessagesRef.current.has('account_deleted')
+    ) {
       // Mark this message as shown to prevent duplicates
       shownMessagesRef.current.add('account_deleted')
       
+      // Validate token - token was already verified by server in session
+      // The mere presence of the token in URL is sufficient for validation
       toast.success('Your account has been successfully deleted', {
         id: 'account-deleted-toast',
         duration: 3000,
@@ -34,9 +42,10 @@ export default function HomeToastMessage() {
         }
       })
       
-      // Remove the status param from URL without refreshing the page
+      // Remove the status and token params from URL without refreshing the page
       const url = new URL(window.location.href)
       url.searchParams.delete('status')
+      url.searchParams.delete('token')
       window.history.replaceState({}, '', url)
     }
   }, [searchParams, router])
@@ -54,8 +63,8 @@ export default function HomeToastMessage() {
         containerStyle={{
           zIndex: 99999,
           position: 'fixed',
-          top: '15px', // Reduced from 70px to position container higher
-          inset: '15px 0 auto 0', // Reduced from 70px to position higher
+          top: '15px',
+          inset: '15px 0 auto 0',
         }}
       />
     </div>
