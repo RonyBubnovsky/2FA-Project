@@ -32,5 +32,6 @@ declare module 'iron-session' {
     lastName?: string
     twoFAVerified?: boolean
     tempSecret?: string
+    emailVerified?: boolean
   }
 }
