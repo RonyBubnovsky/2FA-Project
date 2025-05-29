@@ -5,6 +5,9 @@ import LoadingScreen from '../components/LoadingScreen'
 
 export default function Setup2FAPage() {
   const [qr, setQr] = useState<string>()
+  const [secret, setSecret] = useState<string>()
+  const [showSecret, setShowSecret] = useState(false)
+  const [isLoadingSecret, setIsLoadingSecret] = useState(false)
   const [token, setToken] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -44,6 +47,35 @@ export default function Setup2FAPage() {
         setInitialLoading(false)
       })
   }, [router])
+
+  // Function to fetch the secret when user clicks "Show code"
+  const fetchSecret = async () => {
+    if (secret) {
+      setShowSecret(true)
+      return
+    }
+
+    setIsLoadingSecret(true)
+    try {
+      const res = await fetch('/api/auth/get-2fa-secret', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      })
+      
+      if (!res.ok) {
+        throw new Error('Failed to fetch secret')
+      }
+      
+      const data = await res.json()
+      setSecret(data.secret)
+      setShowSecret(true)
+    } catch (err) {
+      console.error(err)
+      setError('Failed to load secret code')
+    } finally {
+      setIsLoadingSecret(false)
+    }
+  }
 
   async function verify(e: React.FormEvent) {
     e.preventDefault()
@@ -316,11 +348,54 @@ export default function Setup2FAPage() {
           )}
           
           {qr ? (
-            <div className="bg-white dark:bg-secondary-800 p-4 rounded-lg mb-6 flex justify-center">
-              {/* Using a data URL with Next Image requires width and height */}
-              <div 
-                dangerouslySetInnerHTML={{ __html: `<img src="${qr}" alt="QR code" className="max-w-full h-auto" />` }}
-              />
+            <div>
+              <div className="bg-white dark:bg-secondary-800 p-4 rounded-lg mb-4 flex justify-center">
+                {/* Using a data URL with Next Image requires width and height */}
+                <div 
+                  dangerouslySetInnerHTML={{ __html: `<img src="${qr}" alt="QR code" className="max-w-full h-auto" />` }}
+                />
+              </div>
+              
+              <div className="mt-3 mb-6">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm font-medium text-secondary-700 dark:text-secondary-300">
+                    Manual entry code
+                  </span>
+                  <button 
+                    type="button"
+                    onClick={() => showSecret ? setShowSecret(false) : fetchSecret()}
+                    className="text-sm text-primary-600 hover:text-primary-500 focus:outline-none"
+                  >
+                    {isLoadingSecret ? 'Loading...' : (showSecret ? 'Hide' : 'Show')} code
+                  </button>
+                </div>
+                <div className="bg-secondary-50 dark:bg-secondary-800 border border-secondary-200 dark:border-secondary-700 p-3 rounded-md flex items-center justify-between">
+                  {showSecret ? (
+                    <span className="font-mono text-sm select-all break-all overflow-x-auto max-w-[calc(100%-2rem)]">{secret}</span>
+                  ) : (
+                    <span className="text-secondary-500 dark:text-secondary-400 text-sm">●●●●●●●●●●●●●●●●●●●●●●●●</span>
+                  )}
+                  {secret && (
+                    <button 
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(secret);
+                        alert('Secret key copied to clipboard');
+                      }}
+                      className="ml-2 text-primary-600 hover:text-primary-500 focus:outline-none flex-shrink-0"
+                      aria-label="Copy to clipboard"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
+                        <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+                <p className="mt-2 text-xs text-secondary-500 dark:text-secondary-400">
+                  If you can&apos;t scan the QR code, you can manually enter this code into your authenticator app.
+                </p>
+              </div>
             </div>
           ) : (
             <div className="flex justify-center items-center h-48 bg-secondary-50 dark:bg-secondary-800 rounded-lg mb-6">

@@ -23,6 +23,7 @@ interface SessionData {
   lastName?: string;
   twoFAVerified?: boolean;
   tempSecret?: string;
+  emailVerified?: boolean;
 }
 
 async function handler(req: NextApiRequest & { session: IronSession<SessionData> }, res: NextApiResponse) {
@@ -41,7 +42,10 @@ async function handler(req: NextApiRequest & { session: IronSession<SessionData>
   await dbConnect()
   const user = await User.findOne({ email })
   if (!user) return res.status(400).json({ error: 'Invalid credentials' })
-  if (!user.emailVerified) return res.status(403).json({ error: 'Email not verified' })
+  
+  // No longer blocking unverified emails from logging in
+  // We'll just set a flag in the session
+  
   const valid = await bcrypt.compare(password, user.password)
   if (!valid) return res.status(400).json({ error: 'Invalid credentials' })
 
@@ -74,9 +78,14 @@ async function handler(req: NextApiRequest & { session: IronSession<SessionData>
   req.session.firstName = user.firstName
   req.session.lastName = user.lastName
   req.session.twoFAVerified = isTrusted || !user.twoFA?.enabled
+  req.session.emailVerified = user.emailVerified
   
   await req.session.save()
-  return res.json({ twoFAEnabled: !!user.twoFA?.enabled, isTrusted })
+  return res.json({ 
+    twoFAEnabled: !!user.twoFA?.enabled, 
+    isTrusted,
+    emailVerified: user.emailVerified
+  })
 }
 
 export default async function loginRoute(req: NextApiRequest, res: NextApiResponse) {

@@ -120,6 +120,7 @@ describe('login API', () => {
     // Test that jsonData contains expected properties
     expect(res.jsonData).toBeDefined();
     expect(res.jsonData.twoFAEnabled).toBe(false);
+    expect(res.jsonData.emailVerified).toBe(true);
     // By default, isTrusted should be undefined when no trusted device exists
     expect('isTrusted' in res.jsonData).toBe(true);
     expect(res.jsonData.isTrusted).toBeUndefined();
@@ -175,7 +176,7 @@ describe('login API', () => {
     expect(res._getJSONData()).toEqual({ error: 'Invalid credentials' });
   });
   
-  it('should reject unverified email', async () => {
+  it('should allow unverified email to login but set emailVerified flag to false', async () => {
     // Mock user found but email not verified
     const unverifiedUser = {
       ...mockUser,
@@ -189,11 +190,13 @@ describe('login API', () => {
       password: 'password',
     });
     const res = createMockResponse();
+    res.json = jest.fn().mockImplementation(createCustomJsonImplementation());
     
     await handler(req, res);
     
-    expect(res._getStatusCode()).toBe(403);
-    expect(res._getJSONData()).toEqual({ error: 'Email not verified' });
+    expect(res._getStatusCode()).toBe(200);
+    expect(mockSession.emailVerified).toBe(false);
+    expect(res.jsonData.emailVerified).toBe(false);
   });
   
   it('should handle user with 2FA enabled', async () => {
