@@ -1,74 +1,8 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-
-// Password strength component (reused from register page)
-function PasswordStrengthMeter({ password }: { password: string }) {
-  // Calculate password strength
-  const calculateStrength = (password: string) => {
-    if (!password) return 0;
-    
-    let score = 0;
-    
-    // Length check
-    if (password.length >= 8) score += 1;
-    
-    // Character type checks
-    if (/[A-Z]/.test(password)) score += 1;
-    if (/[a-z]/.test(password)) score += 1;
-    if (/[0-9]/.test(password)) score += 1;
-    if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) score += 1;
-    
-    return score;
-  };
-  
-  const strength = calculateStrength(password);
-  
-  // Strength indicators
-  const getStrengthLabel = (strength: number) => {
-    if (strength === 0) return 'Very Weak';
-    if (strength === 1) return 'Weak';
-    if (strength === 2) return 'Fair';
-    if (strength === 3) return 'Good';
-    if (strength === 4) return 'Strong';
-    if (strength === 5) return 'Very Strong';
-    return '';
-  };
-  
-  const getStrengthColor = (strength: number) => {
-    if (strength === 0) return 'bg-red-500';
-    if (strength === 1) return 'bg-red-500';
-    if (strength === 2) return 'bg-orange-500';
-    if (strength === 3) return 'bg-yellow-500';
-    if (strength === 4) return 'bg-green-500';
-    if (strength === 5) return 'bg-green-600';
-    return '';
-  };
-  
-  return (
-    <div className="mt-1 mb-3">
-      <div className="flex h-1 w-full rounded bg-secondary-100 dark:bg-secondary-800 overflow-hidden">
-        {[1, 2, 3, 4, 5].map((level) => (
-          <div
-            key={level}
-            className={`h-full w-1/5 ${level <= strength ? getStrengthColor(strength) : 'bg-secondary-200 dark:bg-secondary-700'}`}
-          />
-        ))}
-      </div>
-      {password && (
-        <p className="text-xs mt-1 text-secondary-600 dark:text-secondary-400">
-          Password strength: <span className="font-medium">{getStrengthLabel(strength)}</span>
-        </p>
-      )}
-      {password && strength < 3 && (
-        <p className="text-xs text-red-500 mt-1">
-          Use at least 8 characters with uppercase, lowercase, numbers and special characters.
-        </p>
-      )}
-    </div>
-  );
-}
+import PasswordStrengthMeter from '../components/PasswordStrengthMeter'
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState('')
@@ -80,6 +14,7 @@ export default function ResetPasswordPage() {
   const [success, setSuccess] = useState(false)
   
   const searchParams = useSearchParams()
+  const router = useRouter()
   
   const token = searchParams?.get('token') || null
   const email = searchParams?.get('email') || null
@@ -87,8 +22,8 @@ export default function ResetPasswordPage() {
   // Validate the token when the page loads
   useEffect(() => {
     if (!token || !email) {
-      setError('Invalid password reset link')
-      setTokenChecked(true)
+      // Redirect to homepage if token or email is missing
+      router.push('/')
       return
     }
     
@@ -96,7 +31,7 @@ export default function ResetPasswordPage() {
     // This avoids an extra API call and potential token leakage
     setIsTokenValid(true)
     setTokenChecked(true)
-  }, [token, email])
+  }, [token, email, router])
   
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -171,7 +106,7 @@ export default function ResetPasswordPage() {
               </div>
             </div>
             <div className="mt-4 text-center">
-              <Link href="/forgot-password" className="btn btn-primary">
+              <Link href="/forgot-password" className="inline-flex justify-center items-center px-5 py-2.5 rounded-md font-medium text-white bg-primary-600 hover:bg-primary-500 shadow-sm transition-all duration-200 ease-in-out">
                 Request a new reset link
               </Link>
             </div>
@@ -211,7 +146,7 @@ export default function ResetPasswordPage() {
               
               <div className="mt-6 text-center">
                 <Link href="/login" 
-                  className="inline-flex justify-center items-center px-5 py-2.5 rounded-md font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-sm transition-all duration-200 ease-in-out">
+                  className="inline-flex justify-center items-center px-5 py-2.5 rounded-md font-medium text-white bg-primary-600 hover:bg-primary-500 shadow-sm transition-all duration-200 ease-in-out">
                   Continue
                 </Link>
               </div>
