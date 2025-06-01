@@ -16,6 +16,10 @@ const rateLimiter = new RateLimiterMemory({
   duration: 3600, // per 1 hour
 })
 
+// Constants for account lockout
+const MAX_FAILED_ATTEMPTS = 5
+const BASE_LOCKOUT_MINUTES = 5
+
 interface SessionData {
   userId?: string;
   email?: string;
@@ -39,19 +43,74 @@ async function handler(req: NextApiRequest & { session: IronSession<SessionData>
   }
   
   const { email, password, remember } = req.body
-  await dbConnect()
-  const user = await User.findOne({ email })
-  if (!user) return res.status(400).json({ error: 'Invalid credentials' })
   
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password are required' })
+  }
+  
+  await dbConnect()
+  
+  // Find user by email
+  const user = await User.findOne({ email })
+  if (!user) {
+    // For security reasons, don't reveal that the email doesn't exist
+    return res.status(400).json({ error: 'Invalid credentials' })
+  }
+  
+  // Check if account is locked
+  const now = new Date()
+  if (user.lockedUntil && user.lockedUntil > now) {
+    const remainingMinutes = Math.ceil((user.lockedUntil.getTime() - now.getTime()) / (60 * 1000))
+    return res.status(403).json({ 
+      error: `Account is temporarily locked. Please try again in ${remainingMinutes} minute${remainingMinutes !== 1 ? 's' : ''}.` 
+    })
+  }
+  
+  // Validate password
+  const valid = await bcrypt.compare(password, user.password)
+  
+  if (!valid) {
+    // Increment failed login attempts
+    user.failedLoginAttempts += 1
+    
+    // Check if we need to lock the account
+    if (user.failedLoginAttempts >= MAX_FAILED_ATTEMPTS) {
+      // Increment lockout count (starts at 0)
+      user.lockoutCount += 1
+      
+      // Calculate lockout duration based on lockout count
+      const lockoutMinutes = BASE_LOCKOUT_MINUTES * user.lockoutCount
+      
+      // Set lockout expiry
+      user.lockedUntil = new Date(now.getTime() + lockoutMinutes * 60 * 1000)
+      
+      // Reset failed attempts counter
+      user.failedLoginAttempts = 0
+      
+      await user.save()
+      
+      return res.status(403).json({ 
+        error: `Too many failed attempts. Account locked for ${lockoutMinutes} minutes.` 
+      })
+    }
+    
+    await user.save()
+    return res.status(400).json({ error: 'Invalid credentials' })
+  }
+  
+  // Password is valid, reset failed attempts and lockout count if any
+  user.failedLoginAttempts = 0
+  if (user.lockoutCount > 0) {
+    user.lockoutCount = 0
+  }
+  user.lockedUntil = undefined
+  await user.save()
+
   // No longer blocking unverified emails from logging in
   // We'll just set a flag in the session
   
-  const valid = await bcrypt.compare(password, user.password)
-  if (!valid) return res.status(400).json({ error: 'Invalid credentials' })
-
   const cookies = parse(req.headers.cookie || '')
   const trustToken = cookies.trusted_device
-  const now = new Date()
   const isTrusted =
     trustToken &&
     user.trustedDevices?.some(d => d.token === trustToken && d.expires > now)
