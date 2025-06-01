@@ -196,3 +196,113 @@ export async function sendPasswordResetEmail(to: string, resetUrl: string) {
     `,
   })
 }
+
+export async function sendAccountLockoutEmail(to: string, lockoutMinutes: number) {
+  const resetPasswordUrl = `${process.env.NEXT_PUBLIC_APP_URL}/forgot-password`
+  
+  await transporter.sendMail({
+    from: `"2FA App" <${process.env.EMAIL_USER}>`,
+    to,
+    subject: 'Account Security Alert: Temporary Account Lockout',
+    text: `Your 2FA App account has been temporarily locked due to multiple failed login attempts. The account will be locked for ${lockoutMinutes} minutes. If this wasn't you, we recommend resetting your password immediately at ${resetPasswordUrl} or contacting our support team.`,
+    html: `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Account Security Alert</title>
+        <style>
+          body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+          }
+          .container {
+            background-color: #f7f9fc;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border: 1px solid #e1e4e8;
+          }
+          .header {
+            text-align: center;
+            margin-bottom: 30px;
+          }
+          .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1a53ff;
+          }
+          .alert-icon {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 48px;
+          }
+          .button-container {
+            text-align: center;
+            margin: 25px 0;
+          }
+          .button {
+            display: inline-block;
+            background-color: #1a53ff;
+            color: white !important;
+            text-decoration: none;
+            padding: 14px 28px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 16px;
+            border: 2px solid #1a53ff;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.16);
+          }
+          .security-note {
+            background-color: #ffebee;
+            border-left: 4px solid #f44336;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+          }
+          .footer {
+            margin-top: 30px;
+            font-size: 14px;
+            color: #666;
+            text-align: center;
+            border-top: 1px solid #e1e4e8;
+            padding-top: 20px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <div class="logo">2FA App</div>
+          </div>
+          <div class="alert-icon">⚠️</div>
+          <h1 style="color: #d32f2f; font-size: 24px; text-align: center;">Account Security Alert</h1>
+          <p>Hello,</p>
+          <p>We've detected multiple failed login attempts to your 2FA App account. As a security precaution, your account has been temporarily locked for <strong>${lockoutMinutes} minutes</strong>.</p>
+          <div class="security-note">
+            <p><strong>Important:</strong> If you were not attempting to log in, someone else may be trying to access your account. We recommend taking the following actions immediately:</p>
+            <ol>
+              <li>Reset your password</li>
+              <li>Check for any unauthorized activity on your account</li>
+              <li>Contact our support team if you need assistance</li>
+            </ol>
+          </div>
+          <div class="button-container">
+            <a href="${resetPasswordUrl}" class="button">Reset Your Password</a>
+          </div>
+          <p>After the lockout period expires, you'll be able to access your account again. If you need immediate assistance, please contact our support team.</p>
+          <p>Best regards,<br>The 2FA App Security Team</p>
+          <div class="footer">
+            <p>© 2025 2FA App. All rights reserved.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `,
+  })
+}

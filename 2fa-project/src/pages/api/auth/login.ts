@@ -9,12 +9,18 @@ import mongoose from 'mongoose'
 import { serialize } from 'cookie'
 import { v4 as uuidv4 } from 'uuid'
 import { RateLimiterMemory } from 'rate-limiter-flexible'
+import { sendAccountLockoutEmail } from '../../../lib/mail'
 
 // Rate limiter configuration: 5 login attempts per hour from the same IP
 const rateLimiter = new RateLimiterMemory({
   points: 5, // 5 login attempts
   duration: 3600, // per 1 hour
 })
+
+// Constants for account lockout
+const MAX_FAILED_ATTEMPTS = 5
+const BASE_LOCKOUT_MINUTES = 5
+const FAILED_ATTEMPTS_RESET_MINUTES = 15
 
 interface SessionData {
   userId?: string;
@@ -39,19 +45,93 @@ async function handler(req: NextApiRequest & { session: IronSession<SessionData>
   }
   
   const { email, password, remember } = req.body
-  await dbConnect()
-  const user = await User.findOne({ email })
-  if (!user) return res.status(400).json({ error: 'Invalid credentials' })
   
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password are required' })
+  }
+  
+  await dbConnect()
+  
+  // Find user by email
+  const user = await User.findOne({ email })
+  if (!user) {
+    // For security reasons, don't reveal that the email doesn't exist
+    return res.status(400).json({ error: 'Invalid credentials' })
+  }
+  
+  // Check if account is locked
+  const now = new Date()
+  if (user.lockedUntil && user.lockedUntil > now) {
+    const remainingMinutes = Math.ceil((user.lockedUntil.getTime() - now.getTime()) / (60 * 1000))
+    return res.status(403).json({ 
+      error: `Account is temporarily locked. Please try again in ${remainingMinutes} minute${remainingMinutes !== 1 ? 's' : ''}.` 
+    })
+  }
+  
+  // Reset failed login attempts if last failure was more than FAILED_ATTEMPTS_RESET_MINUTES ago
+  if (user.lastFailedLoginAt && user.failedLoginAttempts > 0) {
+    const minutesSinceLastFailure = (now.getTime() - user.lastFailedLoginAt.getTime()) / (60 * 1000)
+    if (minutesSinceLastFailure > FAILED_ATTEMPTS_RESET_MINUTES) {
+      user.failedLoginAttempts = 0
+      // Don't save yet - we'll save after checking the password
+    }
+  }
+  
+  // Validate password
+  const valid = await bcrypt.compare(password, user.password)
+  
+  if (!valid) {
+    // Increment failed login attempts
+    user.failedLoginAttempts += 1
+    user.lastFailedLoginAt = now
+    
+    // Check if we need to lock the account
+    if (user.failedLoginAttempts >= MAX_FAILED_ATTEMPTS) {
+      // Increment lockout count (starts at 0)
+      user.lockoutCount += 1
+      
+      // Calculate lockout duration based on lockout count
+      const lockoutMinutes = BASE_LOCKOUT_MINUTES * user.lockoutCount
+      
+      // Set lockout expiry
+      user.lockedUntil = new Date(now.getTime() + lockoutMinutes * 60 * 1000)
+      
+      // Reset failed attempts counter
+      user.failedLoginAttempts = 0
+      
+      await user.save()
+      
+      // Send account lockout notification email
+      try {
+        await sendAccountLockoutEmail(user.email, lockoutMinutes)
+      } catch (error) {
+        console.error('Failed to send account lockout email:', error)
+        // Continue with the response even if the email fails
+      }
+      
+      return res.status(403).json({ 
+        error: `Too many failed attempts. Account locked for ${lockoutMinutes} minutes.` 
+      })
+    }
+    
+    await user.save()
+    return res.status(400).json({ error: 'Invalid credentials' })
+  }
+  
+  // Password is valid, reset failed attempts and lockout count if any
+  user.failedLoginAttempts = 0
+  if (user.lockoutCount > 0) {
+    user.lockoutCount = 0
+  }
+  user.lockedUntil = undefined
+  user.lastFailedLoginAt = undefined
+  await user.save()
+
   // No longer blocking unverified emails from logging in
   // We'll just set a flag in the session
   
-  const valid = await bcrypt.compare(password, user.password)
-  if (!valid) return res.status(400).json({ error: 'Invalid credentials' })
-
   const cookies = parse(req.headers.cookie || '')
   const trustToken = cookies.trusted_device
-  const now = new Date()
   const isTrusted =
     trustToken &&
     user.trustedDevices?.some(d => d.token === trustToken && d.expires > now)

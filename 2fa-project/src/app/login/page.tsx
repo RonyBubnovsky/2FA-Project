@@ -15,6 +15,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [isChecking, setIsChecking] = useState(true)
   const [isUsingRecoveryCode, setIsUsingRecoveryCode] = useState(false)
+  const [isAccountLocked, setIsAccountLocked] = useState(false)
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -72,6 +73,8 @@ export default function LoginPage() {
     e.preventDefault()
     setIsLoading(true)
     setError('')
+    setIsAccountLocked(false)
+    
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
@@ -79,12 +82,17 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password, remember: rememberDevice })
       })
       const data = await res.json()
+      
       if (res.ok && data.twoFAEnabled && !data.isTrusted) {
         setTwoFARequired(true)
       } else if (res.ok) {
         router.push('/dashboard')
         return
       } else {
+        // Check if account is locked
+        if (res.status === 403 && data.error && data.error.includes('locked')) {
+          setIsAccountLocked(true)
+        }
         setError(data.error)
       }
     } catch (error) {
@@ -241,7 +249,7 @@ export default function LoginPage() {
             
             <form onSubmit={handleLogin} className="space-y-6">
               {error && (
-                <div className="rounded-md bg-red-50 dark:bg-red-900/10 p-3 text-sm text-red-600 dark:text-red-400">
+                <div className={`rounded-md p-3 text-sm ${isAccountLocked ? 'bg-amber-50 dark:bg-amber-900/10 text-amber-700 dark:text-amber-500' : 'bg-red-50 dark:bg-red-900/10 text-red-600 dark:text-red-400'}`}>
                   {error}
                 </div>
               )}
@@ -299,7 +307,7 @@ export default function LoginPage() {
               <div>
                 <button
                   type="submit"
-                  disabled={isLoading}
+                  disabled={isLoading || isAccountLocked}
                   className="btn btn-primary w-full py-3"
                 >
                   {isLoading ? 'Signing in...' : 'Sign in'}

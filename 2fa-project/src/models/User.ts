@@ -27,6 +27,10 @@ export interface IUser extends Document {
   }
   trustedDevices?: ITrustedDevice[]
   passwordHistory?: string[]
+  failedLoginAttempts: number
+  lockedUntil?: Date
+  lockoutCount: number
+  lastFailedLoginAt?: Date
 }
 
 // Email validation regex
@@ -78,6 +82,10 @@ const UserSchema = new mongoose.Schema<IUser>({
     },
   ],
   passwordHistory: [String],
+  failedLoginAttempts: { type: Number, default: 0 },
+  lockedUntil: Date,
+  lockoutCount: { type: Number, default: 0 },
+  lastFailedLoginAt: Date
 })
 
 export const User: Model<IUser> =
