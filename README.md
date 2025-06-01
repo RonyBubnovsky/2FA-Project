@@ -29,6 +29,9 @@ This project was developed as a final project for the Software Security course, 
 
   - Strong password enforcement
   - Protection against brute force attacks
+    - Account lockout with escalating timeouts (5, 10, 15 minutes, etc.)
+    - Automatic reset of failed attempts after 15 minutes of inactivity
+    - Email notifications for account lockouts with security recommendations
   - Session management with secure cookies
   - Rate limiting to prevent abuse
   - Trusted device management
@@ -41,6 +44,7 @@ This project was developed as a final project for the Software Security course, 
   - View account details
   - Regenerate recovery codes
   - Manage trusted devices
+  - Change password with password history enforcement (prevents reuse of last 5 passwords)
 
 - **2FA Security Quiz**
   - Interactive educational quiz with 10 questions about 2FA security
@@ -182,6 +186,9 @@ This project implements several security best practices:
 - Rate limiting for sensitive operations
 - Time-based 2FA tokens with secure verification
 - Trusted device tokens with 30-day expiration for enhanced user experience without compromising security
+- Account lockout mechanism with escalating timeouts to prevent brute force attacks
+- Email notifications for security events (account lockouts, password changes)
+- Password history enforcement to prevent password reuse
 
 ## License
 

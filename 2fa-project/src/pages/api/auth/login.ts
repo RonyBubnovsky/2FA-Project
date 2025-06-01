@@ -9,6 +9,7 @@ import mongoose from 'mongoose'
 import { serialize } from 'cookie'
 import { v4 as uuidv4 } from 'uuid'
 import { RateLimiterMemory } from 'rate-limiter-flexible'
+import { sendAccountLockoutEmail } from '../../../lib/mail'
 
 // Rate limiter configuration: 5 login attempts per hour from the same IP
 const rateLimiter = new RateLimiterMemory({
@@ -99,6 +100,14 @@ async function handler(req: NextApiRequest & { session: IronSession<SessionData>
       user.failedLoginAttempts = 0
       
       await user.save()
+      
+      // Send account lockout notification email
+      try {
+        await sendAccountLockoutEmail(user.email, lockoutMinutes)
+      } catch (error) {
+        console.error('Failed to send account lockout email:', error)
+        // Continue with the response even if the email fails
+      }
       
       return res.status(403).json({ 
         error: `Too many failed attempts. Account locked for ${lockoutMinutes} minutes.` 
