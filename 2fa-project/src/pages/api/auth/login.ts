@@ -19,6 +19,7 @@ const rateLimiter = new RateLimiterMemory({
 // Constants for account lockout
 const MAX_FAILED_ATTEMPTS = 5
 const BASE_LOCKOUT_MINUTES = 5
+const FAILED_ATTEMPTS_RESET_MINUTES = 15
 
 interface SessionData {
   userId?: string;
@@ -66,12 +67,22 @@ async function handler(req: NextApiRequest & { session: IronSession<SessionData>
     })
   }
   
+  // Reset failed login attempts if last failure was more than FAILED_ATTEMPTS_RESET_MINUTES ago
+  if (user.lastFailedLoginAt && user.failedLoginAttempts > 0) {
+    const minutesSinceLastFailure = (now.getTime() - user.lastFailedLoginAt.getTime()) / (60 * 1000)
+    if (minutesSinceLastFailure > FAILED_ATTEMPTS_RESET_MINUTES) {
+      user.failedLoginAttempts = 0
+      // Don't save yet - we'll save after checking the password
+    }
+  }
+  
   // Validate password
   const valid = await bcrypt.compare(password, user.password)
   
   if (!valid) {
     // Increment failed login attempts
     user.failedLoginAttempts += 1
+    user.lastFailedLoginAt = now
     
     // Check if we need to lock the account
     if (user.failedLoginAttempts >= MAX_FAILED_ATTEMPTS) {
@@ -104,6 +115,7 @@ async function handler(req: NextApiRequest & { session: IronSession<SessionData>
     user.lockoutCount = 0
   }
   user.lockedUntil = undefined
+  user.lastFailedLoginAt = undefined
   await user.save()
 
   // No longer blocking unverified emails from logging in
