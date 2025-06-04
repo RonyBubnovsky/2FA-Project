@@ -109,6 +109,9 @@ This project was developed as a final project for the Software Security course, 
    # HMAC secret for additional encryption - Generate a secure random string
    HMAC_SECRET=
 
+   # Recovery Code secret for additional encryption - Generate a secure random string
+   RECOVERY_CODE_SECRET=
+
    # Google reCAPTCHA v2 keys for bot protection
    # Get these from https://www.google.com/recaptcha/admin/
    NEXT_PUBLIC_RECAPTCHA_SITE_KEY=
