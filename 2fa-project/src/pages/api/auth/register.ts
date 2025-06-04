@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from 'uuid'
 import crypto from 'crypto'
 import fetch from 'node-fetch'
 import { RateLimiterMemory } from 'rate-limiter-flexible'
+import { validateEmail } from '@/utils/validation'
 
 // Rate limiter configuration: 5 registration attempts per hour from the same IP
 const rateLimiter = new RateLimiterMemory({
@@ -15,10 +16,7 @@ const rateLimiter = new RateLimiterMemory({
 })
 
 // Validation functions
-const isValidEmail = (email: string) => {
-  const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
-  return regex.test(email)
-}
+const isValidEmail = validateEmail
 
 const isValidPassword = (password: string) => {
   // Password requirements:
