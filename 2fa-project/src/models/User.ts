@@ -1,4 +1,5 @@
 import mongoose, { Document, Model } from 'mongoose'
+import { validateEmail } from '@/utils/validation'
 
 interface ITrustedDevice {
   token: string
@@ -33,17 +34,18 @@ export interface IUser extends Document {
   lastFailedLoginAt?: Date
 }
 
-// Email validation regex
-const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-
 const UserSchema = new mongoose.Schema<IUser>({
   email: { 
     type: String, 
     unique: true, 
     required: [true, 'Email is required'],
-    match: [emailRegex, 'Please provide a valid email address'],
+    validate: {
+      validator: validateEmail,
+      message: 'Please provide a valid email address'
+    },
     trim: true,
-    lowercase: true
+    lowercase: true,
+    maxlength: [254, 'Email cannot exceed 254 characters'] // RFC 5322 limit
   },
   password: { 
     type: String, 
@@ -87,6 +89,10 @@ const UserSchema = new mongoose.Schema<IUser>({
   lockoutCount: { type: Number, default: 0 },
   lastFailedLoginAt: Date
 })
+
+// Add index for better query performance
+UserSchema.index({ emailVerified: 1 });
+UserSchema.index({ lockedUntil: 1 });
 
 export const User: Model<IUser> =
   mongoose.models.User || mongoose.model('User', UserSchema)

@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import ReCAPTCHA from 'react-google-recaptcha'
 import { PasswordStrengthMeter } from '../components/PasswordStrengthMeter'
+import { validateEmail } from '@/utils/validation'
 
 export default function RegisterPage() {
   const [email, setEmail] = useState('')
@@ -50,9 +51,8 @@ export default function RegisterPage() {
   }, [router])
   
   // Validate email with regex
-  const validateEmail = (email: string) => {
-    const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
-    return regex.test(email)
+  const validateEmailInput = (email: string) => {
+    return validateEmail(email)
   }
   
   // Validate password
@@ -130,7 +130,7 @@ export default function RegisterPage() {
     // Email validation
     if (!email) {
       errors.email = 'Email is required';
-    } else if (!validateEmail(email)) {
+    } else if (!validateEmailInput(email)) {
       errors.email = 'Please enter a valid email address';
     }
     
