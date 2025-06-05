@@ -227,34 +227,48 @@ export default function Setup2FAPage() {
         <div className="flex min-h-[80vh] flex-col items-center justify-center py-12">
           <Toaster />
           <div className="w-full max-w-md">
-            <div className="card">
+            <div className="card bg-secondary-800 dark:bg-secondary-900 text-white p-8 shadow-lg rounded-lg border border-secondary-700">
               <div className="mb-6 text-center">
-                <h2 className="text-2xl font-display font-bold text-secondary-900 dark:text-secondary-100">
+                <h2 className="text-2xl font-display font-bold text-white mb-2">
                   Manage Two-Factor Authentication
                 </h2>
-                <p className="mt-2 text-sm text-secondary-600 dark:text-secondary-400">
+                <p className="text-secondary-200 dark:text-secondary-300">
                   Two-factor authentication is currently enabled for your account
                 </p>
               </div>
               
               {error && (
-                <div className="rounded-md bg-red-50 dark:bg-red-900/10 p-3 mb-6 text-sm text-red-600 dark:text-red-400">
-                  {error}
+                <div className="rounded-md bg-red-900/20 p-4 mb-6 text-sm text-red-400 border border-red-800/40">
+                  <div className="flex">
+                    <svg className="h-5 w-5 text-red-400 mr-2 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clipRule="evenodd" />
+                    </svg>
+                    <span>{error}</span>
+                  </div>
                 </div>
               )}
               
               {showDisableConfirm ? (
                 <div>
-                  <div className="bg-amber-50 dark:bg-amber-900/10 p-4 rounded-lg mb-6">
-                    <h3 className="text-amber-800 dark:text-amber-400 font-medium">Disable 2FA Confirmation</h3>
-                    <p className="text-amber-700 dark:text-amber-500 mt-1 text-sm">
-                      This will make your account less secure. To disable 2FA, please enter the code from your authenticator app.
-                    </p>
+                  <div className="bg-amber-900/20 p-4 rounded-lg mb-6 border border-amber-700/40">
+                    <div className="flex items-start">
+                      <div className="flex-shrink-0">
+                        <svg className="h-5 w-5 text-amber-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                      <div className="ml-3">
+                        <h3 className="text-amber-400 font-medium">Disable 2FA Confirmation</h3>
+                        <p className="text-amber-300 mt-1 text-sm">
+                          This will make your account less secure. To disable 2FA, please enter the code from your authenticator app.
+                        </p>
+                      </div>
+                    </div>
                   </div>
                   
                   <form onSubmit={disable2FA} className="space-y-6">
                     <div>
-                      <label htmlFor="token" className="block text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-1">
+                      <label htmlFor="token" className="block text-sm font-medium text-secondary-300 mb-2">
                         Authentication Code
                       </label>
                       <input
@@ -266,7 +280,7 @@ export default function Setup2FAPage() {
                         placeholder="000000"
                         value={token}
                         onChange={e => setToken(e.target.value)}
-                        className="input"
+                        className="w-full px-4 py-3 bg-secondary-700 border border-secondary-600 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 rounded-md text-white placeholder-secondary-400"
                         required
                       />
                     </div>
@@ -297,7 +311,7 @@ export default function Setup2FAPage() {
                       <button
                         type="button"
                         onClick={() => setShowDisableConfirm(false)}
-                        className="w-full py-2 px-4 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-medium rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full py-3 px-4 bg-secondary-600 hover:bg-secondary-500 text-white font-medium rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         disabled={isLoading}
                       >
                         Cancel
@@ -307,30 +321,66 @@ export default function Setup2FAPage() {
                 </div>
               ) : (
                 <div>
-                  <div className="bg-green-50 dark:bg-green-900/10 p-4 rounded-lg mb-6">
-                    <p className="text-green-700 dark:text-green-500">
-                      Your account is protected with two-factor authentication. You will need your authenticator app whenever you sign in.
-                    </p>
+                  <div className="bg-green-900/20 p-5 rounded-lg mb-8 border border-green-700/40">
+                    <div className="flex items-center">
+                      <div className="flex-shrink-0 bg-green-500/20 p-2 rounded-full">
+                        <svg className="h-6 w-6 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                      <div className="ml-4">
+                        <p className="text-green-400 font-medium text-lg">
+                          Your account is protected with two-factor authentication.
+                        </p>
+                        <p className="text-green-500 mt-1 text-sm">
+                          You will need your authenticator app whenever you sign in.
+                        </p>
+                      </div>
+                    </div>
                   </div>
                   
-                  <div className="mt-6 pt-6 border-t border-secondary-200 dark:border-secondary-800">
+                  <div className="bg-secondary-700 p-4 rounded-lg mb-6">
+                    <h3 className="text-lg font-medium text-secondary-200 mb-2">Account Security</h3>
+                    <ul className="space-y-3">
+                      <li className="flex items-start">
+                        <svg className="h-5 w-5 text-green-400 mr-2 mt-0.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
+                        </svg>
+                        <span className="text-secondary-300">Unauthorized access prevention</span>
+                      </li>
+                      <li className="flex items-start">
+                        <svg className="h-5 w-5 text-green-400 mr-2 mt-0.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
+                        </svg>
+                        <span className="text-secondary-300">Protection against credential theft</span>
+                      </li>
+                    </ul>
+                  </div>
+                  
+                  <div className="mt-8 pt-6 border-t border-secondary-700">
                     <button
                       type="button"
                       onClick={() => setShowDisableConfirm(true)}
-                      className="btn btn-outline-danger w-full"
+                      className="w-full py-3 px-4 bg-red-600/20 hover:bg-red-600/30 text-red-400 font-medium rounded-md transition-colors flex justify-center items-center"
                     >
+                      <svg className="mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clipRule="evenodd" />
+                      </svg>
                       Disable Two-Factor Authentication
                     </button>
                   </div>
                 </div>
               )}
               
-              <div className="mt-6">
+              <div className="mt-6 pt-6 border-t border-secondary-700 text-center">
                 <button
                   type="button"
                   onClick={() => router.push('/dashboard')}
-                  className="text-sm text-primary-600 hover:text-primary-500"
+                  className="text-primary-400 hover:text-primary-300 font-medium flex items-center justify-center mx-auto"
                 >
+                  <svg className="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
+                  </svg>
                   Return to Dashboard
                 </button>
               </div>
