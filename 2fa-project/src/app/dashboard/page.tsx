@@ -172,6 +172,7 @@ export default async function Dashboard() {
                     <h3 className="text-lg font-medium text-white mb-2">Secure Access</h3>
                     <p>This page is protected and cannot be accessed if no active session is available.</p>
                     <p>You can only see this content after successfully verifying your identity.</p>
+                    <p>For your security, you will be automatically logged out after 15 minutes of inactivity.</p>
                   </div>
                   
                   <div className="bg-secondary-900 p-6 rounded-lg border-2 border-secondary-300 dark:border-secondary-600 text-secondary-200 dark:text-secondary-300 shadow-lg">
