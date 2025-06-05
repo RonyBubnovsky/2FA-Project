@@ -37,6 +37,8 @@ This project was developed as a final project for the Software Security course, 
   - Trusted device management
   - Device recognition system to reduce 2FA prompts
   - Google reCAPTCHA protection during registration
+  - Automatic logout after 15 minutes of inactivity on protected routes for enhanced security
+  - Client-side activity monitoring to prevent unauthorized access on unattended devices
 
 - **User Dashboard**
 
@@ -192,6 +194,7 @@ This project implements several security best practices:
 - Account lockout mechanism with escalating timeouts to prevent brute force attacks
 - Email notifications for security events (account lockouts, password changes)
 - Password history enforcement to prevent password reuse
+- Automatic session termination after 15 minutes of inactivity on protected routes to prevent unauthorized access
 
 ## License
 
