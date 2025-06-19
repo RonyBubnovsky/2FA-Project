@@ -77,6 +77,7 @@ async function handler(req: NextApiRequest & { session: IronSession<SessionData>
   // Then immediately disable 2FA and clear all recovery codes for security
   user.twoFA.enabled = false;
   user.twoFA.recoveryCodes = [];
+  user.twoFA.secret = ''; // Clear the encrypted secret for security
 
   // Log the action using a simple note in the database
   const securityLog: SecurityLog = {

@@ -53,6 +53,7 @@ async function handler(req: NextApiRequest & { session: IronSession<SessionData>
   user.twoFA.recoveryCodes[recoveryCodeIndex].used = true
   user.twoFA.enabled = false
   user.twoFA.recoveryCodes = []
+  user.twoFA.secret = '' // Clear the encrypted secret for security
 
   // Log security action
   const securityLog = {
