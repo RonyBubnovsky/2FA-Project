@@ -104,7 +104,10 @@ describe('2FA disable API', () => {
     
     // Verify response
     expect(res._getStatusCode()).toBe(200);
-    expect(res._getJSONData()).toEqual({ success: true });
+    expect(res._getJSONData()).toEqual({ 
+      success: true,
+      message: '2FA has been disabled and recovery codes invalidated' 
+    });
   });
 
   // Failure tests

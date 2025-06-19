@@ -14,6 +14,14 @@ interface SessionData {
   tempSecret?: string;
 }
 
+// Interface for security log
+interface SecurityLog {
+  action: string;
+  timestamp: Date;
+  ipAddress: string | string[] | null;
+  userAgent: string | null;
+}
+
 async function handler(req: NextApiRequest & { session: IronSession<SessionData> }, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).end()
   const { token } = req.body
@@ -40,11 +48,29 @@ async function handler(req: NextApiRequest & { session: IronSession<SessionData>
     return res.status(400).json({ error: 'Invalid authentication code' })
   }
   
-  // Disable 2FA
-  user.twoFA.enabled = false
-  await user.save()
+  // Disable 2FA and clear recovery codes
+  user.twoFA.enabled = false;
   
-  return res.json({ success: true })
+  // Clear recovery codes if they exist
+  if (user.twoFA.recoveryCodes && user.twoFA.recoveryCodes.length > 0) {
+    user.twoFA.recoveryCodes = [];
+  }
+  
+  // Log the action using a simple note in the database
+  const securityLog: SecurityLog = {
+    action: '2FA_DISABLED',
+    timestamp: new Date(),
+    ipAddress: req.headers['x-forwarded-for'] || req.socket.remoteAddress || null,
+    userAgent: req.headers['user-agent'] || null
+  };
+  // Use direct property assignment with a two-step type assertion
+  // for safer type conversion that satisfies the linter
+  const userDoc = user as unknown as { lastSecurityAction?: SecurityLog };
+  userDoc.lastSecurityAction = securityLog;
+  
+  await user.save();
+  
+  return res.json({ success: true, message: '2FA has been disabled and recovery codes invalidated' })
 }
 
 export default async function disable2FARoute(req: NextApiRequest, res: NextApiResponse) {
