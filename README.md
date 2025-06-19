@@ -113,11 +113,23 @@ This project was developed as a final project for the Software Security course, 
    # Recovery Code secret for additional encryption - Generate a secure random string
    RECOVERY_CODE_SECRET=
 
+   # Secret key for encrypting 2FA secrets (64-character hex string)
+   # Generate using: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+   SECRET_ENCRYPTION_KEY=
+
    # Google reCAPTCHA v2 keys for bot protection
    # Get these from https://www.google.com/recaptcha/admin/
    NEXT_PUBLIC_RECAPTCHA_SITE_KEY=
    RECAPTCHA_SECRET_KEY=
    ```
+
+   To generate the SECRET_ENCRYPTION_KEY, run this command in your terminal:
+
+   ```bash
+   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+   ```
+
+   Copy the 64-character output and paste it as your SECRET_ENCRYPTION_KEY value.
 
    To obtain your reCAPTCHA keys:
 
@@ -189,6 +201,7 @@ This project implements several security best practices:
 - Secure session management
 - Rate limiting for sensitive operations
 - Time-based 2FA tokens with secure verification
+- Encryption of 2FA secrets before storing in the database
 - Trusted device tokens with 30-day expiration for enhanced user experience without compromising security
 - Account lockout mechanism with escalating timeouts to prevent brute force attacks
 - Email notifications for security events (account lockouts, password changes)

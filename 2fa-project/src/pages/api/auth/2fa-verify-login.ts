@@ -6,6 +6,7 @@ import dbConnect from '../../../lib/mongodb'
 import { User } from '../../../models/User'
 import { serialize } from 'cookie'
 import { v4 as uuidv4 } from 'uuid'
+import crypto from 'crypto'
 
 interface SessionData {
   userId?: string;
@@ -14,6 +15,27 @@ interface SessionData {
   lastName?: string;
   twoFAVerified?: boolean;
   tempSecret?: string;
+}
+
+// Function to decrypt the stored 2FA secret
+function decryptSecret(encryptedSecret: string): string {
+  const encryptionKey = process.env.SECRET_ENCRYPTION_KEY!;
+  const parts = encryptedSecret.split(':');
+  const iv = Buffer.from(parts[0], 'hex');
+  const encrypted = parts[1];
+  
+  // Create decipher
+  const decipher = crypto.createDecipheriv(
+    'aes-256-cbc',
+    Buffer.from(encryptionKey, 'hex'),
+    iv
+  );
+  
+  // Decrypt the data
+  let decrypted = decipher.update(encrypted, 'hex', 'utf8');
+  decrypted += decipher.final('utf8');
+  
+  return decrypted;
 }
 
 async function handler(req: NextApiRequest & { session: IronSession<SessionData> }, res: NextApiResponse) {
@@ -26,8 +48,11 @@ async function handler(req: NextApiRequest & { session: IronSession<SessionData>
   const user = await User.findById(userId)
   if (!user || !user.twoFA?.enabled) return res.status(400).end()
 
+  // Decrypt the secret before verification
+  const decryptedSecret = decryptSecret(user.twoFA.secret);
+  
   const ok = speakeasy.totp.verify({
-    secret: user.twoFA.secret,
+    secret: decryptedSecret,
     encoding: 'base32',
     token,
   })

@@ -19,6 +19,13 @@ export default function LoginPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
+  // Function to log state changes only in non-production
+  const logStateChange = (stateName: string, value: boolean) => {
+    if (process.env.NODE_ENV !== "production") {
+      console.log(`[DEBUG] ${stateName} changed to:`, value);
+    }
+  };
+
   // Check if user is already logged in
   useEffect(() => {
     async function checkAuth() {
@@ -193,17 +200,38 @@ export default function LoginPage() {
                 />
               </div>
               
-              <div className="flex items-center">
-                <input
-                  id="rememberDevice2FA"
-                  type="checkbox"
-                  className="h-4 w-4 rounded border-secondary-300 text-primary-600 focus:ring-primary-500 dark:border-secondary-700 dark:bg-secondary-900"
-                  checked={rememberDevice}
-                  onChange={e => setRememberDevice(e.target.checked)}
-                />
-                <label htmlFor="rememberDevice2FA" className="ml-2 block text-sm text-secondary-700 dark:text-secondary-300">
+              <div className="flex items-center justify-between py-2">
+                <span className="block text-sm text-secondary-700 dark:text-secondary-300">
                   Remember this device for 30 days
-                </label>
+                </span>
+                <div className="relative">
+                  <div 
+                    className={`w-12 h-6 rounded-full shadow-inner flex items-center transition-colors duration-300 ease-in-out cursor-pointer ${
+                      rememberDevice 
+                        ? 'bg-primary-500 dark:bg-primary-600' 
+                        : 'bg-secondary-200 dark:bg-secondary-700'
+                    }`}
+                    onClick={() => {
+                      const newValue = !rememberDevice;
+                      setRememberDevice(newValue);
+                      logStateChange('rememberDevice', newValue);
+                    }}
+                  >
+                    <div 
+                      className={`absolute w-5 h-5 rounded-full shadow transform transition-transform duration-300 ease-in-out ${
+                        rememberDevice 
+                          ? 'translate-x-6 bg-white' 
+                          : 'translate-x-1 bg-white dark:bg-secondary-300'
+                      }`}
+                    />
+                  </div>
+                  <input
+                    type="checkbox"
+                    className="sr-only"
+                    checked={rememberDevice}
+                    onChange={e => setRememberDevice(e.target.checked)}
+                  />
+                </div>
               </div>
               
               {isUsingRecoveryCode && (
@@ -291,17 +319,38 @@ export default function LoginPage() {
                 />
               </div>
               
-              <div className="flex items-center">
-                <input
-                  id="rememberDevice"
-                  type="checkbox"
-                  className="h-4 w-4 rounded border-secondary-300 text-primary-600 focus:ring-primary-500 dark:border-secondary-700 dark:bg-secondary-900"
-                  checked={rememberDevice}
-                  onChange={e => setRememberDevice(e.target.checked)}
-                />
-                <label htmlFor="rememberDevice" className="ml-2 block text-sm text-secondary-700 dark:text-secondary-300">
+              <div className="flex items-center justify-between py-2">
+                <span className="block text-sm text-secondary-700 dark:text-secondary-300">
                   Remember this device for 30 days
-                </label>
+                </span>
+                <div className="relative">
+                  <div 
+                    className={`w-12 h-6 rounded-full shadow-inner flex items-center transition-colors duration-300 ease-in-out cursor-pointer ${
+                      rememberDevice 
+                        ? 'bg-primary-500 dark:bg-primary-600' 
+                        : 'bg-secondary-200 dark:bg-secondary-700'
+                    }`}
+                    onClick={() => {
+                      const newValue = !rememberDevice;
+                      setRememberDevice(newValue);
+                      logStateChange('rememberDevice', newValue);
+                    }}
+                  >
+                    <div 
+                      className={`absolute w-5 h-5 rounded-full shadow transform transition-transform duration-300 ease-in-out ${
+                        rememberDevice 
+                          ? 'translate-x-6 bg-white' 
+                          : 'translate-x-1 bg-white dark:bg-secondary-300'
+                      }`}
+                    />
+                  </div>
+                  <input
+                    type="checkbox"
+                    className="sr-only"
+                    checked={rememberDevice}
+                    onChange={e => setRememberDevice(e.target.checked)}
+                  />
+                </div>
               </div>
               
               <div>

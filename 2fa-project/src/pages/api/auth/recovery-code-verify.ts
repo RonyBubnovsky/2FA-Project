@@ -48,11 +48,22 @@ async function handler(req: NextApiRequest & { session: IronSession<SessionData>
     return res.status(400).json({ error: 'Invalid recovery code' })
   }
 
-  // Mark the recovery code as used
+  // First, mark the specific recovery code as used (for audit purposes)
+  // Then immediately disable 2FA and clear all recovery codes for security
   user.twoFA.recoveryCodes[recoveryCodeIndex].used = true
-
-  // Disable 2FA since a recovery code was used
   user.twoFA.enabled = false
+  user.twoFA.recoveryCodes = []
+
+  // Log security action
+  const securityLog = {
+    action: 'RECOVERY_CODE_USED_2FA_DISABLED',
+    timestamp: new Date(),
+    ipAddress: req.headers['x-forwarded-for'] || req.socket.remoteAddress || null,
+    userAgent: req.headers['user-agent'] || null
+  };
+  
+  const userDoc = user as unknown as { lastSecurityAction?: typeof securityLog };
+  userDoc.lastSecurityAction = securityLog;
 
   await user.save()
 

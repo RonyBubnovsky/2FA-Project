@@ -3,12 +3,25 @@ import { createMockRequest, createMockResponse } from '../../utils/testUtils';
 import { User } from '../../../models/User';
 import speakeasy from 'speakeasy';
 
+
 // Mock dependencies
 jest.mock('speakeasy', () => ({
   totp: {
     verify: jest.fn()
   }
 }));
+
+// Mock crypto for decryption
+jest.mock('crypto', () => {
+  const originalCrypto = jest.requireActual('crypto');
+  return {
+    ...originalCrypto,
+    createDecipheriv: jest.fn().mockReturnValue({
+      update: jest.fn().mockReturnValue('TESTSECRETBASE32'),
+      final: jest.fn().mockReturnValue('')
+    })
+  };
+});
 
 // Import handler dynamically to ensure mocks are applied
 let handler: any;
@@ -31,7 +44,8 @@ describe('2FA disable API', () => {
       email: 'test@example.com',
       twoFA: {
         enabled: true,
-        secret: 'TESTSECRETBASE32',
+        // Now use an encrypted-style secret (IV:encrypted format)
+        secret: '1234567890abcdef1234567890abcdef:encryptedSecret',
         recoveryCodes: []
       },
       save: jest.fn().mockResolvedValue(true)
@@ -67,6 +81,9 @@ describe('2FA disable API', () => {
     (User.findById as jest.Mock).mockReset();
     (speakeasy.totp.verify as jest.Mock).mockReset();
     
+    // Set up environment variable needed for decryption
+    process.env.SECRET_ENCRYPTION_KEY = 'a'.repeat(64);
+    
     // Import handler after mocks are set up
     jest.isolateModules(() => {
       handler = require('../../../pages/api/auth/2fa-disable').default;
@@ -91,9 +108,9 @@ describe('2FA disable API', () => {
     
     await handler(req, res);
     
-    // Verify token validation
+    // Verify token validation with the decrypted secret
     expect(speakeasy.totp.verify).toHaveBeenCalledWith({
-      secret: 'TESTSECRETBASE32',
+      secret: 'TESTSECRETBASE32', // This is what our mock decryption returns
       encoding: 'base32',
       token: '123456'
     });
@@ -104,7 +121,10 @@ describe('2FA disable API', () => {
     
     // Verify response
     expect(res._getStatusCode()).toBe(200);
-    expect(res._getJSONData()).toEqual({ success: true });
+    expect(res._getJSONData()).toEqual({ 
+      success: true,
+      message: '2FA has been disabled and recovery codes invalidated' 
+    });
   });
 
   // Failure tests

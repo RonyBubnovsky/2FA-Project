@@ -17,6 +17,30 @@ jest.mock('uuid', () => ({
   v4: jest.fn().mockReturnValue('mock-device-token')
 }));
 
+// Mock crypto for encryption
+jest.mock('crypto', () => {
+  const actualCrypto = jest.requireActual('crypto');
+  return {
+    ...actualCrypto,
+    randomBytes: jest.fn().mockImplementation((size) => {
+      if (size === 16) {
+        // For encryption IV
+        return Buffer.from('1234567890abcdef');
+      }
+      // For recovery codes
+      return { toString: jest.fn().mockReturnValue('abcd1234') };
+    }),
+    createCipheriv: jest.fn().mockReturnValue({
+      update: jest.fn().mockReturnValue('encrypted-secret'),
+      final: jest.fn().mockReturnValue('')
+    }),
+    createHash: jest.fn().mockReturnValue({
+      update: jest.fn().mockReturnThis(),
+      digest: jest.fn().mockReturnValue('hashed-recovery-code')
+    })
+  };
+});
+
 // Import handler dynamically to ensure mocks are applied
 let handler: any;
 
@@ -62,6 +86,7 @@ describe('2FA verify setup API', () => {
     
     // Mock environment variables
     process.env.RECOVERY_CODE_SECRET = 'test-recovery-secret';
+    process.env.SECRET_ENCRYPTION_KEY = 'a'.repeat(64);
     
     // Import handler after mocks are set up
     jest.isolateModules(() => {
@@ -104,6 +129,14 @@ describe('2FA verify setup API', () => {
     expect(res._getStatusCode()).toBe(200);
     expect(res._getJSONData().ok).toBe(true);
     expect(res._getJSONData().recoveryCodes).toHaveLength(10);
+    
+    // Verify the secret was encrypted before saving
+    expect(crypto.createCipheriv).toHaveBeenCalled();
+    expect(mockUser.twoFA).toBeDefined();
+    // The secret should be in format "iv:encrypted"
+    if (mockUser.twoFA) {
+      expect(mockUser.twoFA.secret).toContain(':');
+    }
   });
   
   it('should set up trusted device when requested', async () => {

@@ -83,11 +83,12 @@ describe('Recovery code verify API', () => {
     // Verify user was found and updated
     expect(User.findById).toHaveBeenCalledWith('mock-user-id');
     
-    // Verify recovery code was marked as used
-    expect(mockUser.twoFA.recoveryCodes[0].used).toBe(true);
-    
     // Verify 2FA was disabled
     expect(mockUser.twoFA.enabled).toBe(false);
+    
+    // Verify recovery codes were cleared completely
+    expect(mockUser.twoFA.recoveryCodes).toEqual([]);
+    
     expect(mockUser.save).toHaveBeenCalled();
     
     // Verify session was updated

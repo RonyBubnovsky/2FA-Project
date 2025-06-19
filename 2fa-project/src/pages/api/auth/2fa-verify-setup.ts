@@ -30,6 +30,27 @@ function hashRecoveryCode(code: string) {
     .digest('hex');
 }
 
+// Function to encrypt the 2FA secret
+function encryptSecret(secret: string): string {
+  // Use a separate encryption key from environment variables
+  const encryptionKey = process.env.SECRET_ENCRYPTION_KEY!;
+  const iv = crypto.randomBytes(16);
+  
+  // Create cipher using AES-256-CBC
+  const cipher = crypto.createCipheriv(
+    'aes-256-cbc', 
+    Buffer.from(encryptionKey, 'hex'), 
+    iv
+  );
+  
+  // Encrypt the data
+  let encrypted = cipher.update(secret, 'utf8', 'hex');
+  encrypted += cipher.final('hex');
+  
+  // Return IV and encrypted data
+  return iv.toString('hex') + ':' + encrypted;
+}
+
 async function handler(req: NextApiRequest & { session: IronSession<SessionData> }, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).end()
   const { token, trustDevice } = req.body
@@ -56,9 +77,9 @@ async function handler(req: NextApiRequest & { session: IronSession<SessionData>
     used: false
   }));
 
-  // Set up 2FA with recovery codes
+  // Set up 2FA with recovery codes and encrypt the secret
   user.twoFA = { 
-    secret: base32, 
+    secret: encryptSecret(base32), 
     enabled: true,
     recoveryCodes: hashedRecoveryCodes
   };
