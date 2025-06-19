@@ -20,6 +20,18 @@ jest.mock('cookie', () => ({
   serialize: jest.fn().mockReturnValue('trusted_device=mock-device-token; options')
 }));
 
+// Mock crypto for decryption
+jest.mock('crypto', () => {
+  const originalCrypto = jest.requireActual('crypto');
+  return {
+    ...originalCrypto,
+    createDecipheriv: jest.fn().mockReturnValue({
+      update: jest.fn().mockReturnValue('TESTSECRETBASE32'),
+      final: jest.fn().mockReturnValue('')
+    })
+  };
+});
+
 // Import handler dynamically to ensure mocks are applied
 let handler: any;
 
@@ -41,7 +53,8 @@ describe('2FA verify login API', () => {
       email: 'test@example.com',
       twoFA: {
         enabled: true,
-        secret: 'TESTSECRETBASE32',
+        // Now use an encrypted-style secret (IV:encrypted format)
+        secret: '1234567890abcdef1234567890abcdef:encryptedSecret',
         recoveryCodes: []
       },
       trustedDevices: [] as any[],
@@ -58,6 +71,9 @@ describe('2FA verify login API', () => {
     (serialize as jest.Mock).mockReset();
     (serialize as jest.Mock).mockReturnValue('trusted_device=mock-device-token; options');
     
+    // Set up environment variable needed for decryption
+    process.env.SECRET_ENCRYPTION_KEY = 'a'.repeat(64);
+
     // Import handler after mocks are set up
     jest.isolateModules(() => {
       handler = require('../../../pages/api/auth/2fa-verify-login').default;
@@ -80,9 +96,9 @@ describe('2FA verify login API', () => {
     
     await handler(req, res);
     
-    // Verify 2FA was checked
+    // Verify 2FA was checked with the decrypted secret
     expect(speakeasy.totp.verify).toHaveBeenCalledWith({
-      secret: 'TESTSECRETBASE32',
+      secret: 'TESTSECRETBASE32', // This is what our mock decryption returns
       encoding: 'base32',
       token: '123456'
     });
