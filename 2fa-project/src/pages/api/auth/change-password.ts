@@ -6,6 +6,7 @@ import bcrypt from 'bcryptjs'
 import { getIronSession } from 'iron-session'
 import { sessionOptions } from '../../../lib/session'
 import mongoose from 'mongoose'
+import { sendPasswordChangeSuccessEmail } from '../../../lib/mail'
 
 interface SessionData {
   userId?: string
@@ -134,9 +135,16 @@ export default async function handler(
       user.trustedDevices = []
       await user.save()
     }
-    
-    // Remove rate limit record on successful password change
+      // Remove rate limit record on successful password change
     await resetRateLimit(session.userId, ENDPOINT_NAME);
+
+    // Send success email notification
+    try {
+      await sendPasswordChangeSuccessEmail(user.email)
+    } catch (emailError) {
+      console.error('Failed to send password change success email:', emailError)
+      // Don't fail the password change if email fails
+    }
 
     return res.status(200).json({
       success: true,
