@@ -306,3 +306,221 @@ export async function sendAccountLockoutEmail(to: string, lockoutMinutes: number
     `,
   })
 }
+
+export async function sendPasswordResetSuccessEmail(to: string) {
+  await transporter.sendMail({
+    from: `"2FA App" <${process.env.EMAIL_USER}>`,
+    to,
+    subject: 'Password Reset Successful',
+    text: `Your password has been successfully reset. If you did not make this change, please contact our support team immediately.`,
+    html: `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Password Reset Successful</title>
+        <style>
+          body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+          }
+          .container {
+            background-color: #f7f9fc;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border: 1px solid #e1e4e8;
+          }
+          .header {
+            text-align: center;
+            margin-bottom: 30px;
+          }
+          .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1a53ff;
+          }
+          .success-icon {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 48px;
+          }
+          .button-container {
+            text-align: center;
+            margin: 25px 0;
+          }
+          .button {
+            display: inline-block;
+            background-color: #1a53ff;
+            color: white !important;
+            text-decoration: none;
+            padding: 14px 28px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 16px;
+            border: 2px solid #1a53ff;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.16);
+          }
+          .security-note {
+            background-color: #e8f5e8;
+            border-left: 4px solid #4caf50;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+          }
+          .footer {
+            margin-top: 30px;
+            font-size: 14px;
+            color: #666;
+            text-align: center;
+            border-top: 1px solid #e1e4e8;
+            padding-top: 20px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <div class="logo">2FA App</div>
+          </div>
+          <div class="success-icon">✅</div>
+          <h1 style="color: #4caf50; font-size: 24px; text-align: center;">Password Reset Successful</h1>
+          <p>Hello,</p>
+          <p>Your password has been successfully reset for your 2FA App account.</p>
+          <div class="security-note">
+            <p><strong>Security Information:</strong></p>
+            <ul>
+              <li>Your password was reset on ${new Date().toLocaleString()}</li>
+              <li>If you have 2FA enabled, your trusted devices have been cleared for security</li>
+              <li>You can now log in with your new password</li>
+            </ul>
+          </div>
+          <p><strong>Important:</strong> If you did not make this change, please contact our support team immediately as your account may have been compromised.</p>
+          <div class="button-container">
+            <a href="${process.env.NEXT_PUBLIC_APP_URL}/login" class="button">Log In to Your Account</a>
+          </div>
+          <p>Thank you for keeping your account secure.</p>
+          <p>Best regards,<br>The 2FA App Security Team</p>
+          <div class="footer">
+            <p>© 2025 2FA App. All rights reserved.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `,
+  })
+}
+
+export async function sendPasswordChangeSuccessEmail(to: string) {
+  await transporter.sendMail({
+    from: `"2FA App" <${process.env.EMAIL_USER}>`,
+    to,
+    subject: 'Password Changed Successfully',
+    text: `Your password has been successfully changed. If you did not make this change, please contact our support team immediately.`,
+    html: `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Password Changed Successfully</title>
+        <style>
+          body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+          }
+          .container {
+            background-color: #f7f9fc;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border: 1px solid #e1e4e8;
+          }
+          .header {
+            text-align: center;
+            margin-bottom: 30px;
+          }
+          .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1a53ff;
+          }
+          .success-icon {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 48px;
+          }
+          .button-container {
+            text-align: center;
+            margin: 25px 0;
+          }
+          .button {
+            display: inline-block;
+            background-color: #1a53ff;
+            color: white !important;
+            text-decoration: none;
+            padding: 14px 28px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 16px;
+            border: 2px solid #1a53ff;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.16);
+          }
+          .security-note {
+            background-color: #e8f5e8;
+            border-left: 4px solid #4caf50;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+          }
+          .footer {
+            margin-top: 30px;
+            font-size: 14px;
+            color: #666;
+            text-align: center;
+            border-top: 1px solid #e1e4e8;
+            padding-top: 20px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <div class="logo">2FA App</div>
+          </div>
+          <div class="success-icon">✅</div>
+          <h1 style="color: #4caf50; font-size: 24px; text-align: center;">Password Changed Successfully</h1>
+          <p>Hello,</p>
+          <p>Your password has been successfully changed for your 2FA App account.</p>
+          <div class="security-note">
+            <p><strong>Security Information:</strong></p>
+            <ul>
+              <li>Your password was changed on ${new Date().toLocaleString()}</li>
+              <li>If you have 2FA enabled, your trusted devices have been cleared for security</li>
+              <li>Your account remains secure with your new password</li>
+            </ul>
+          </div>
+          <p><strong>Important:</strong> If you did not make this change, please contact our support team immediately as your account may have been compromised.</p>
+          <div class="button-container">
+            <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard" class="button">Go to Dashboard</a>
+          </div>
+          <p>Thank you for keeping your account secure.</p>
+          <p>Best regards,<br>The 2FA App Security Team</p>
+          <div class="footer">
+            <p>© 2025 2FA App. All rights reserved.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `,
+  })
+}

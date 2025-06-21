@@ -3,6 +3,7 @@ import dbConnect from '../../../lib/mongodb'
 import { User } from '../../../models/User'
 import bcrypt from 'bcryptjs'
 import crypto from 'crypto'
+import { sendPasswordResetSuccessEmail } from '../../../lib/mail'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).end()
@@ -84,8 +85,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (user.twoFA?.enabled) {
     user.trustedDevices = []
   }
+    await user.save()
   
-  await user.save()
+  // Send success email notification
+  try {
+    await sendPasswordResetSuccessEmail(user.email)
+  } catch (emailError) {
+    console.error('Failed to send password reset success email:', emailError)
+    // Don't fail the password reset if email fails
+  }
   
   return res.json({ 
     success: true, 
