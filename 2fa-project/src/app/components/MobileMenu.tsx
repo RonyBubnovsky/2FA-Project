@@ -5,24 +5,36 @@ import { usePathname } from 'next/navigation'
 export default function MobileMenu() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true)
   const pathname = usePathname()
   
   // Check if the current page is the quiz results page
   const isQuizResults = pathname?.startsWith('/2fa-quiz') && pathname?.includes('?results=true');
-  
-  useEffect(() => {
-    // Check if user is logged in based on the current path
-    // This is a simple way to determine login status without an API call
-    if (pathname) {
-      setIsLoggedIn(
-        pathname === '/dashboard' || 
-        pathname.startsWith('/dashboard/') ||
-        pathname === '/2fa-setup' ||
-        pathname.startsWith('/2fa-setup/') ||
-        pathname === '/2fa-quiz' ||
-        pathname.startsWith('/2fa-quiz/')
-      )
+    useEffect(() => {
+    const checkAuthStatus = async () => {
+      try {
+        const response = await fetch('/api/auth/status')
+        const data = await response.json()
+        setIsLoggedIn(data.authenticated || false)
+      } catch (error) {
+        console.error('Error checking auth status:', error)
+        // Fallback to pathname-based logic for protected routes
+        if (pathname) {
+          setIsLoggedIn(
+            pathname === '/dashboard' || 
+            pathname.startsWith('/dashboard/') ||
+            pathname === '/2fa-setup' ||
+            pathname.startsWith('/2fa-setup/') ||
+            pathname === '/2fa-quiz' ||
+            pathname.startsWith('/2fa-quiz/')
+          )
+        }
+      } finally {
+        setIsCheckingAuth(false)
+      }
     }
+    
+    checkAuthStatus()
   }, [pathname])
 
   return (
@@ -32,9 +44,13 @@ export default function MobileMenu() {
           <a href={isLoggedIn ? "/dashboard" : "/"} className="font-display text-2xl font-semibold tracking-tight text-primary-600 dark:text-primary-500">
             My2FAApp
           </a>
-          
-          <nav className="hidden md:flex items-center space-x-4">
-            {!isLoggedIn ? (
+            <nav className="hidden md:flex items-center space-x-4">
+            {isCheckingAuth ? (
+              <div className="flex items-center space-x-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600"></div>
+                <span className="text-secondary-600 dark:text-secondary-400">Loading...</span>
+              </div>
+            ) : !isLoggedIn ? (
               <>
                 <a href="/login" className="bg-secondary-800 hover:bg-secondary-700 text-white hover:text-white font-medium px-5 py-2.5 rounded-md transition-colors duration-200">
                   Sign In
@@ -90,10 +106,14 @@ export default function MobileMenu() {
                   <path d="m6 6 12 12"></path>
                 </svg>
               </button>
-            </div>
-            <div className="flow-root">
+            </div>            <div className="flow-root">
               <div className="py-6 space-y-4">
-                {!isLoggedIn ? (
+                {isCheckingAuth ? (
+                  <div className="flex items-center justify-center space-x-2 py-3">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary-600"></div>
+                    <span className="text-secondary-600 dark:text-secondary-400">Loading...</span>
+                  </div>
+                ) : !isLoggedIn ? (
                   <>
                     <a href="/login" className="block w-full py-3 font-medium text-center bg-secondary-800 text-white hover:text-white rounded-md hover:bg-secondary-700 transition-colors duration-200">Sign In</a>
                     <a href="/register" className="block w-full py-3 font-medium text-center bg-primary-600 text-white hover:text-white rounded-md hover:bg-primary-500 transition-colors duration-200">Get Started</a>

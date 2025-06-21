@@ -258,11 +258,9 @@ export default function PrivacyTermsPage() {
                 href="/" 
                 className="border border-white text-white hover:bg-white hover:text-primary-600 font-semibold py-3 px-6 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-primary-600"
               >
-                Back to Home
-              </Link>
+                Back to Home              </Link>
             </div>
-          </div>
-        </section>
+          </div>        </section>
       </div>
     </div>
   )
