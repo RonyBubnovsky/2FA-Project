@@ -44,9 +44,8 @@ This project was developed as a final project for the Software Security course, 
 
   - Manage 2FA settings
   - View account details
-  - Regenerate recovery codes
-  - Manage trusted devices
   - Change password with password history enforcement (prevents reuse of last 5 passwords)
+  - Take the 2FA Security Quiz
 
 - **2FA Security Quiz**
   - Interactive educational quiz with 10 questions about 2FA security
