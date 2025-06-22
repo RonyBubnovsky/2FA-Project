@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { transporter } from '../../../lib/mail'
 import { RateLimiterMemory } from 'rate-limiter-flexible'
+import { validateEmail } from '../../../utils/validation'
 
 // Rate limiter configuration: 5 requests per hour (3600 seconds)
 const rateLimiter = new RateLimiterMemory({
@@ -36,11 +37,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Validate required fields
     if (!name || !email || !subject || !message) {
       return res.status(400).json({ error: 'All fields are required' })
-    }
-
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(email)) {
+    }    // Validate email format
+    if (!validateEmail(email)) {
       return res.status(400).json({ error: 'Invalid email format' })
     }
 
