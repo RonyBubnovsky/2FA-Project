@@ -4,7 +4,8 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 import { validateEmail } from '../../utils/validation'
 
-export default function ContactPage() {  const [formData, setFormData] = useState({
+export default function ContactPage() {
+  const [formData, setFormData] = useState({
     name: '',
     email: '',
     subject: '',
@@ -60,7 +61,9 @@ export default function ContactPage() {  const [formData, setFormData] = useStat
     
     if (formData.name.length > 100) {
       return 'Name must be no more than 100 characters'
-    }    return null // No validation errors
+    }
+
+    return null // No validation errors
   }
 
   // Validate individual field
@@ -89,8 +92,10 @@ export default function ContactPage() {  const [formData, setFormData] = useStat
       
       default:
         return ''
-    }  }
-    // Check if form is valid and ready to submit
+    }
+  }
+
+  // Check if form is valid and ready to submit
   const isFormValid = (): boolean => {
     // Check if all required fields are filled
     const isAllFieldsFilled = !!(formData.name.trim() && 
@@ -155,7 +160,8 @@ export default function ContactPage() {  const [formData, setFormData] = useStat
       setIsSubmitting(false)
     }
   }
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     
     // Clear success or error message when user starts typing again
@@ -246,7 +252,9 @@ export default function ContactPage() {  const [formData, setFormData] = useStat
                       </p>
                     </div>
                   </div>
-                )}                {submitStatus === 'error' && (
+                )}
+
+                {submitStatus === 'error' && (
                   <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
                     <div className="flex items-center">
                       <svg className="w-5 h-5 text-red-600 dark:text-red-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
@@ -264,7 +272,8 @@ export default function ContactPage() {  const [formData, setFormData] = useStat
                     <div>
                       <label htmlFor="name" className="block text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-2">
                         Full Name *
-                      </label>                      <input
+                      </label>
+                      <input
                         type="text"
                         id="name"
                         name="name"
@@ -283,7 +292,8 @@ export default function ContactPage() {  const [formData, setFormData] = useStat
                     <div>
                       <label htmlFor="email" className="block text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-2">
                         Email Address *
-                      </label>                      <input
+                      </label>
+                      <input
                         type="email"
                         id="email"
                         name="email"
@@ -304,7 +314,8 @@ export default function ContactPage() {  const [formData, setFormData] = useStat
                   <div>
                     <label htmlFor="subject" className="block text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-2">
                       Subject *
-                    </label>                    <select
+                    </label>
+                    <select
                       id="subject"
                       name="subject"
                       required
@@ -331,7 +342,8 @@ export default function ContactPage() {  const [formData, setFormData] = useStat
                   <div>
                     <label htmlFor="message" className="block text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-2">
                       Message *
-                    </label>                    <textarea
+                    </label>
+                    <textarea
                       id="message"
                       name="message"
                       required
@@ -348,7 +360,8 @@ export default function ContactPage() {  const [formData, setFormData] = useStat
                     )}
                     <div className="mt-1 text-sm text-secondary-500 dark:text-secondary-400 text-right">
                       {formData.message.length}/2000 characters
-                    </div>                  </div>
+                    </div>
+                  </div>
 
                   {!isFormValid() && !isSubmitting && (
                     <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
@@ -361,7 +374,8 @@ export default function ContactPage() {  const [formData, setFormData] = useStat
                     </div>
                   )}
 
-                  <div className="flex flex-col sm:flex-row gap-4"><button
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <button
                       type="submit"
                       disabled={isSubmitting || !isFormValid()}
                       className="flex-1 bg-primary-600 hover:bg-primary-700 disabled:bg-primary-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-secondary-900"
@@ -376,7 +390,8 @@ export default function ContactPage() {  const [formData, setFormData] = useStat
                           Sending...
                         </span>
                       ) : (
-                        'Send Message'                      )}
+                        'Send Message'
+                      )}
                     </button>
                     <Link
                       href="/"
@@ -387,7 +402,8 @@ export default function ContactPage() {  const [formData, setFormData] = useStat
                   </div>
                 </form>
               </div>
-            </div>        </div>
-    </div>
+            </div>
+          </div>
+        </div>
   )
 }
