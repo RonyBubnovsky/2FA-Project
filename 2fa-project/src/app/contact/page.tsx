@@ -3,8 +3,7 @@
 import React, { useState } from 'react'
 import Link from 'next/link'
 
-export default function ContactPage() {
-  const [formData, setFormData] = useState({
+export default function ContactPage() {  const [formData, setFormData] = useState({
     name: '',
     email: '',
     subject: '',
@@ -12,11 +11,12 @@ export default function ContactPage() {
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitStatus, setSubmitStatus] = useState<'success' | 'error' | null>(null)
-
+  const [errorMessage, setErrorMessage] = useState<string>('')
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
     setSubmitStatus(null)
+    setErrorMessage('')
 
     try {
       const response = await fetch('/api/auth/contact', {
@@ -27,20 +27,36 @@ export default function ContactPage() {
         body: JSON.stringify(formData),
       })
 
+      const data = await response.json()
+
       if (response.ok) {
         setSubmitStatus('success')
         setFormData({ name: '', email: '', subject: '', message: '' })
       } else {
         setSubmitStatus('error')
+        if (response.status === 429) {
+          // Rate limit error - show remaining time if available
+          const remainingTime = data.remainingTime
+          const timeText = remainingTime ? ` Try again in ${Math.ceil(remainingTime / 60)} minutes.` : ''
+          setErrorMessage(`${data.error}${timeText}`)
+        } else {
+          setErrorMessage(data.error || 'Failed to send message. Please try again.')
+        }
       }
     } catch {
       setSubmitStatus('error')
+      setErrorMessage('Network error. Please check your connection and try again.')
     } finally {
       setIsSubmitting(false)
     }
   }
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    // Clear error message when user starts typing again
+    if (submitStatus === 'error') {
+      setSubmitStatus(null)
+      setErrorMessage('')
+    }
+    
     setFormData(prev => ({
       ...prev,
       [e.target.name]: e.target.value
@@ -115,16 +131,14 @@ export default function ContactPage() {
                       </p>
                     </div>
                   </div>
-                )}
-
-                {submitStatus === 'error' && (
+                )}                {submitStatus === 'error' && (
                   <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
                     <div className="flex items-center">
                       <svg className="w-5 h-5 text-red-600 dark:text-red-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                       </svg>
                       <p className="text-red-700 dark:text-red-300">
-                        Failed to send message. Please try again.
+                        {errorMessage}
                       </p>
                     </div>
                   </div>
