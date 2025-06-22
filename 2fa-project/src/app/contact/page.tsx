@@ -12,6 +12,7 @@ export default function ContactPage() {  const [formData, setFormData] = useStat
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitStatus, setSubmitStatus] = useState<'success' | 'error' | null>(null)
   const [errorMessage, setErrorMessage] = useState<string>('')
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
@@ -50,9 +51,10 @@ export default function ContactPage() {  const [formData, setFormData] = useStat
       setIsSubmitting(false)
     }
   }
+  
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    // Clear error message when user starts typing again
-    if (submitStatus === 'error') {
+    // Clear success or error message when user starts typing again
+    if (submitStatus !== null) {
       setSubmitStatus(null)
       setErrorMessage('')
     }
