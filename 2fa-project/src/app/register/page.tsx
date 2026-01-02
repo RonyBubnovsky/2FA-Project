@@ -1,6 +1,5 @@
 'use client'
 import { useState, useRef } from 'react'
-import { useRouter } from 'next/navigation'
 import ReCAPTCHA from 'react-google-recaptcha'
 import { PasswordStrengthMeter } from '../components/PasswordStrengthMeter'
 import { validateEmail } from '@/utils/validation'
@@ -17,7 +16,6 @@ export default function RegisterPage() {
   const [captchaToken, setCaptchaToken] = useState<string | null>(null)
   const [passwordStrength, setPasswordStrength] = useState(0)
   const recaptchaRef = useRef<ReCAPTCHA>(null)
-  const router = useRouter()
   const [validationErrors, setValidationErrors] = useState<{
     email?: string;
     firstName?: string;

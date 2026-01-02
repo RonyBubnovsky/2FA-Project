@@ -2,16 +2,9 @@
 import { useState } from 'react'
 import { usePathname } from 'next/navigation'
 
-// Public pages where we know the user is not authenticated
-// (server-side already redirects authenticated users away from these pages)
-const PUBLIC_PAGES = ['/', '/login', '/register', '/forgot-password', '/reset-password', '/verify-email', '/contact', '/privacy-terms']
-
 export default function MobileMenu() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const pathname = usePathname()
-  
-  // Check if we're on a public page - no need to check auth, show Sign In/Get Started immediately
-  const isPublicPage = PUBLIC_PAGES.some(page => pathname === page || pathname?.startsWith(page + '/'))
   
   // For protected pages, we know the user is authenticated (server-side redirects non-authenticated users)
   const isProtectedPage = pathname === '/dashboard' || 
