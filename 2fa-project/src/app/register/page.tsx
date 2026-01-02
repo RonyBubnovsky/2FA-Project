@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import ReCAPTCHA from 'react-google-recaptcha'
 import { PasswordStrengthMeter } from '../components/PasswordStrengthMeter'
@@ -14,7 +14,6 @@ export default function RegisterPage() {
   const [message, setMessage] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
-  const [isChecking, setIsChecking] = useState(true)
   const [captchaToken, setCaptchaToken] = useState<string | null>(null)
   const [passwordStrength, setPasswordStrength] = useState(0)
   const recaptchaRef = useRef<ReCAPTCHA>(null)
@@ -27,28 +26,6 @@ export default function RegisterPage() {
     confirmPassword?: string;
     captcha?: string;
   }>({})
-  
-  // Check if user is already logged in
-  useEffect(() => {
-    async function checkAuth() {
-      try {
-        // Use a dedicated API endpoint to check auth status
-        const res = await fetch('/api/auth/status')
-        const data = await res.json()
-        
-        if (data.authenticated) {
-          router.replace('/dashboard')
-          return
-        }
-      } catch (error) {
-        console.error('Auth check error:', error)
-      } finally {
-        setIsChecking(false)
-      }
-    }
-    
-    checkAuth()
-  }, [router])
   
   // Validate email with regex
   const validateEmailInput = (email: string) => {
@@ -237,19 +214,6 @@ export default function RegisterPage() {
     } finally {
       setIsLoading(false)
     }
-  }
-
-  // Add loading state at the top of the return statement
-  if (isChecking) {
-    return (
-      <div className="flex min-h-[80vh] flex-col items-center justify-center py-12">
-        <div className="animate-pulse flex space-x-2">
-          <div className="h-2 w-2 bg-primary-300 dark:bg-primary-600 rounded-full"></div>
-          <div className="h-2 w-2 bg-primary-300 dark:bg-primary-600 rounded-full"></div>
-          <div className="h-2 w-2 bg-primary-300 dark:bg-primary-600 rounded-full"></div>
-        </div>
-      </div>
-    )
   }
 
   return (
