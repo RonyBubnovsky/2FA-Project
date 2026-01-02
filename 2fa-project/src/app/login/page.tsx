@@ -13,7 +13,6 @@ export default function LoginPage() {
   const [token, setToken] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [isChecking, setIsChecking] = useState(true)
   const [isUsingRecoveryCode, setIsUsingRecoveryCode] = useState(false)
   const [isAccountLocked, setIsAccountLocked] = useState(false)
   const router = useRouter()
@@ -26,29 +25,6 @@ export default function LoginPage() {
     }
   };
 
-  // Check if user is already logged in
-  useEffect(() => {
-    async function checkAuth() {
-      try {
-        // Use a dedicated API endpoint to check auth status
-        const res = await fetch('/api/auth/status')
-        const data = await res.json()
-        
-        if (data.authenticated) {
-          // User is authenticated, redirect to dashboard
-          router.replace('/dashboard')
-          return
-        }
-      } catch (error) {
-        console.error('Auth check error:', error)
-      } finally {
-        setIsChecking(false)
-      }
-    }
-    
-    checkAuth()
-  }, [router])
-  
   // Check for logout success message
   useEffect(() => {
     if (searchParams) {
@@ -142,18 +118,6 @@ export default function LoginPage() {
     setIsUsingRecoveryCode(!isUsingRecoveryCode)
     setToken('')
     setError('')
-  }
-
-  if (isChecking) {
-    return (
-      <div className="flex min-h-[80vh] flex-col items-center justify-center py-12">
-        <div className="animate-pulse flex space-x-2">
-          <div className="h-2 w-2 bg-primary-300 dark:bg-primary-600 rounded-full"></div>
-          <div className="h-2 w-2 bg-primary-300 dark:bg-primary-600 rounded-full"></div>
-          <div className="h-2 w-2 bg-primary-300 dark:bg-primary-600 rounded-full"></div>
-        </div>
-      </div>
-    )
   }
 
   return (
